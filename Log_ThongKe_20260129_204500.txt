@@ -1,0 +1,17 @@
+=== BÁO CÁO THỐNG KÊ TÀI LIỆU THƯ VIỆN ===
+Thời gian xuất: Thu Jan 29 20:45:00 GMT+07:00 2026
+Tổng tài sản thực tế: 364 cuốn
+--------------------------------------------------
+Loại danh sách: Sách Đang Cho Mượn
+Số lượng bản ghi: 8
+--------------------------------------------------
+MÃ SÁCH         TÊN SÁCH                                 TÌNH TRẠNG                    
+--------------------------------------------------
+S001            Clean Code - Mã Sạch                     Đang mượn bởi DG008 (Phiếu PM01)
+S002            Lập Trinh Java Cơ Bản                    Đang mượn bởi DG008 (Phiếu PM01)
+S003            Head First Design Patterns               Đang mượn bởi DG006 (Phiếu PM02)
+S007            Harry Potter và Hòn Đá Phù Thủy          Đang mượn bởi DG005 (Phiếu PM05)
+S008            Nhà Giả Kim                              Đang mượn bởi DG005 (Phiếu PM05)
+S011            Đắc Nhân Tâm                             Đang mượn bởi DG003 (Phiếu PM417193)
+S001            Clean Code - Mã Sạch                     Đang mượn bởi DG001 (Phiếu PM542067)
+S001            Clean Code - Mã Sạch                     Đang mượn bởi DG4918 (Phiếu PM583006)
