@@ -1,8 +1,9 @@
 package com.qlthuvien.GUI;
 
-import com.qlthuvien.DAL.DAL_PhieuMuon; // [MỚI] Import để lấy chi tiết phiếu
+import com.qlthuvien.DAL.DAL_PhieuMuon; 
 import com.qlthuvien.DAL.DAL_ThongKe;
 import com.qlthuvien.DTO.DTO_PhieuMuon;
+import com.qlthuvien.UTIL.ExcelExporter; // [MỚI] Import bộ xuất Excel
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,19 +11,15 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.MouseAdapter; // [MỚI] Xử lý chuột
-import java.awt.event.MouseEvent;   // [MỚI] Xử lý chuột
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class GUI_DialogThongKeMuonTra extends JDialog {
 
     private DAL_ThongKe dal = new DAL_ThongKe();
-    private DAL_PhieuMuon dalPhieu = new DAL_PhieuMuon(); // [MỚI] Khai báo DAL Phiếu Mượn
+    private DAL_PhieuMuon dalPhieu = new DAL_PhieuMuon();
     
     private JTable table;
     private DefaultTableModel model;
@@ -71,6 +68,8 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
         ButtonGroup bg = new ButtonGroup();
         bg.add(rdoNgay); bg.add(rdoTuan); bg.add(rdoThang); bg.add(rdoDangMuon);
         pnlFilter.add(rdoNgay); pnlFilter.add(rdoTuan); pnlFilter.add(rdoThang); pnlFilter.add(rdoDangMuon);
+        
+        pnlContent.add(pnlFilter, BorderLayout.NORTH);
 
         // 2. Table (Trang trí đẹp hơn)
         String[] cols = {"Mã Phiếu Mượn", "Ngày Mượn", "Ngày Trả", "Trạng Thái"};
@@ -109,10 +108,6 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
         pnlFooter.add(lblTongSach);
 
         // Gộp vào Content
-        JPanel pnlTop = new JPanel(new BorderLayout());
-        pnlTop.add(pnlFilter, BorderLayout.NORTH);
-        
-        pnlContent.add(pnlTop, BorderLayout.NORTH);
         pnlContent.add(new JScrollPane(table), BorderLayout.CENTER);
         pnlContent.add(pnlFooter, BorderLayout.SOUTH); // Đưa footer vào sát bảng
         
@@ -120,12 +115,13 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
 
         // --- BOTTOM BUTTON ---
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnLog = new JButton("Ghi log");
-        btnLog.setPreferredSize(new Dimension(140, 35));
-        btnLog.setBackground(Color.WHITE);
-        btnLog.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        JButton btnXuat = new JButton("Xuất Excel"); // [MỚI] Đổi tên nút
+        btnXuat.setPreferredSize(new Dimension(150, 35));
+        btnXuat.setBackground(new Color(40, 167, 69)); // Màu xanh Excel
+        btnXuat.setForeground(Color.WHITE);
+        btnXuat.setFont(new Font("Segoe UI", Font.BOLD, 12));
         
-        pnlBot.add(btnLog);
+        pnlBot.add(btnXuat);
         add(pnlBot, BorderLayout.SOUTH);
 
         // --- EVENTS ---
@@ -133,9 +129,11 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
         rdoTuan.addActionListener(e -> loadData("WEEK"));
         rdoThang.addActionListener(e -> loadData("MONTH"));
         rdoDangMuon.addActionListener(e -> loadData("CURRENT"));
-        btnLog.addActionListener(e -> xuLyGhiLog());
+        
+        // [MỚI] Sự kiện Xuất Excel
+        btnXuat.addActionListener(e -> xuLyXuatExcel());
 
-        // [MỚI] Sự kiện Double Click vào bảng để xem chi tiết
+        // Sự kiện Double Click vào bảng để xem chi tiết
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -179,22 +177,13 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
         lblTongSach.setText(String.valueOf(list.size()) + " phiếu");
     }
 
-    private void xuLyGhiLog() {
-        try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String path = System.getProperty("user.home") + File.separator + "Desktop" + File.separator + "Log_MuonTra_" + timeStamp + ".txt";
-            PrintWriter pw = new PrintWriter(new FileWriter(path));
-            pw.println("THỐNG KÊ MƯỢN TRẢ - " + new Date());
-            pw.println("Tổng số: " + lblTongSach.getText());
-            pw.println("-------------------------------------------------");
-            pw.printf("%-15s %-20s %-20s %-15s\n", "MÃ PHIẾU", "NGÀY MƯỢN", "NGÀY TRẢ", "TRẠNG THÁI");
-            pw.println("-------------------------------------------------");
-            for(int i=0; i<model.getRowCount(); i++) {
-                pw.printf("%-15s %-20s %-20s %-15s\n", 
-                    model.getValueAt(i, 0), model.getValueAt(i, 1), model.getValueAt(i, 2), model.getValueAt(i, 3));
-            }
-            pw.close();
-            JOptionPane.showMessageDialog(this, "Đã lưu log tại: " + path);
-        } catch (Exception e) { e.printStackTrace(); }
+    // [MỚI] Hàm xử lý xuất Excel sử dụng class tiện ích ExcelExporter
+    private void xuLyXuatExcel() {
+        if (table.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        // Gọi class tiện ích ExcelExporter (sẽ hiện hộp thoại chọn nơi lưu)
+        new ExcelExporter().exportTable(table);
     }
 }

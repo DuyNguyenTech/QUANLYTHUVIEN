@@ -1,11 +1,12 @@
 package com.qlthuvien.GUI;
 
-import com.qlthuvien.DAL.DAL_Sach;
 import com.qlthuvien.DAL.DAL_DocGia;
 import com.qlthuvien.DAL.DAL_PhieuMuon;
-import com.qlthuvien.DTO.DTO_Sach;
+import com.qlthuvien.DAL.DAL_Sach;
 import com.qlthuvien.DTO.DTO_DocGia;
 import com.qlthuvien.DTO.DTO_PhieuMuon;
+import com.qlthuvien.DTO.DTO_Sach;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -13,272 +14,275 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class GUI_DialogPhieuMuon extends JDialog {
 
-    private JTextField txtMaPhieu, txtMaDocGia, txtTenDocGia, txtThuThu, txtNgayMuon, txtHanTra, txtTienPhat;
+    private JTextField txtMaPhieu, txtMaDG, txtTenDG, txtNgayMuon, txtHanTra, txtTienPhat, txtThuThu;
     private JComboBox<String> cboTinhTrang;
+    private JTable tblDocGia, tblKhoSach, tblSachMuon; // 3 Bảng như cũ
+    private DefaultTableModel modelDocGia, modelKho, modelMuon;
     
-    private JTable tblDocGia, tblKhoSach, tblSachMuon;
-    private DefaultTableModel modelDocGia, modelKhoSach, modelSachMuon;
+    private ArrayList<DTO_Sach> listKho = new ArrayList<>();
+    private ArrayList<DTO_Sach> listMuon = new ArrayList<>();
     
     private DAL_Sach dalSach = new DAL_Sach();
-    private DAL_DocGia dalDocGia = new DAL_DocGia();
-    private DAL_PhieuMuon dalPhieu = new DAL_PhieuMuon(); 
+    private DAL_DocGia dalDG = new DAL_DocGia();
+    private DAL_PhieuMuon dalPM = new DAL_PhieuMuon();
     
-    private GUI_QuanLyMuonTra parentGUI; 
-    private DTO_PhieuMuon phieuSua = null; 
-    private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy"); // Định dạng ngày chuẩn Việt Nam
+    private boolean isUpdate = false;
+    private String currentMaThuThu; 
 
-    // --- CONSTRUCTOR 1: DÙNG CHO THÊM MỚI ---
-    public GUI_DialogPhieuMuon(JPanel parent) {
-        super(SwingUtilities.getWindowAncestor(parent), ModalityType.APPLICATION_MODAL);
-        this.parentGUI = (GUI_QuanLyMuonTra) parent;
+    // Constructor 1: TẠO MỚI
+    public GUI_DialogPhieuMuon(Window parent, String maThuThuDangNhap) {
+        super(parent, ModalityType.APPLICATION_MODAL);
+        this.currentMaThuThu = maThuThuDangNhap;
+        this.isUpdate = false;
         initUI();
-        loadDataDocGia();
-        loadDataKhoSach();
-        autoGenMaPhieu();
-        txtThuThu.setText("ADMIN"); // Có thể thay bằng mã thủ thư đang đăng nhập
+        
+        // Auto gen data
+        txtMaPhieu.setText("PM" + System.currentTimeMillis() / 1000);
+        txtNgayMuon.setText(new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
+        long sevenDays = 7L * 24 * 60 * 60 * 1000;
+        txtHanTra.setText(new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date(System.currentTimeMillis() + sevenDays)));
+        
+        txtThuThu.setText(currentMaThuThu);
     }
 
-    // --- CONSTRUCTOR 2: DÙNG CHO CẬP NHẬT (SỬA) ---
-    public GUI_DialogPhieuMuon(JPanel parent, DTO_PhieuMuon pm) {
-        super(SwingUtilities.getWindowAncestor(parent), ModalityType.APPLICATION_MODAL);
-        this.parentGUI = (GUI_QuanLyMuonTra) parent;
-        this.phieuSua = pm;
+    // Constructor 2: CẬP NHẬT
+    public GUI_DialogPhieuMuon(Window parent, DTO_PhieuMuon pm, String maThuThuDangNhap) {
+        super(parent, ModalityType.APPLICATION_MODAL);
+        this.currentMaThuThu = maThuThuDangNhap;
+        this.isUpdate = true;
         initUI();
-        loadDataDocGia();
-        loadDataKhoSach();
         
-        // Fill dữ liệu cũ
+        // Fill data cũ
         txtMaPhieu.setText(pm.getMaPhieuMuon());
-        txtMaDocGia.setText(pm.getMaDocGia());
-        txtThuThu.setText(pm.getMaThuThu());
-        txtNgayMuon.setText(sdf.format(pm.getNgayMuon()));
-        txtHanTra.setText(sdf.format(pm.getNgayHenTra()));
-        txtTienPhat.setText(String.valueOf((long)pm.getTienPhat()));
-        cboTinhTrang.setSelectedItem(pm.getTinhTrang());
+        txtMaDG.setText(pm.getMaDocGia());
         
-        setTitle("CẬP NHẬT PHIẾU MƯỢN: " + pm.getMaPhieuMuon());
+        DTO_DocGia dg = dalDG.getChiTiet(pm.getMaDocGia());
+        if(dg != null) txtTenDG.setText(dg.getTenDocGia());
+        
+        txtNgayMuon.setText(pm.getNgayMuon().toString());
+        txtHanTra.setText(pm.getNgayHenTra().toString());
+        cboTinhTrang.setSelectedItem(pm.getTinhTrang());
+        txtTienPhat.setText(String.valueOf((int)pm.getTienPhat()));
+        
+        // Logic chọn người duyệt: Nếu là ONLINE hoặc Chờ duyệt -> Gán người đang đăng nhập
+        if("ONLINE".equalsIgnoreCase(pm.getMaThuThu()) || "Chờ duyệt".equals(pm.getTinhTrang())) {
+             txtThuThu.setText(currentMaThuThu); 
+        } else {
+             txtThuThu.setText(pm.getMaThuThu());
+        }
+        
+        txtMaPhieu.setEditable(false);
+        txtMaDG.setEditable(false); 
+
+        // Load sách của phiếu này
+        listMuon = dalPM.getSachCuaPhieu(pm.getMaPhieuMuon());
+        updateTableMuon();
     }
 
     private void initUI() {
-        setTitle("TẠO PHIẾU MƯỢN MỚI");
-        setSize(1100, 700);
+        setTitle(isUpdate ? "CẬP NHẬT PHIẾU MƯỢN" : "TẠO PHIẾU MƯỢN MỚI");
+        setSize(1200, 700); // Tăng kích thước để chứa đủ 3 bảng
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // HEADER
-        JLabel lblTitle = new JLabel(phieuSua == null ? "TẠO PHIẾU MƯỢN MỚI" : "CẬP NHẬT PHIẾU MƯỢN", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblTitle.setForeground(Color.WHITE);
-        lblTitle.setOpaque(true);
-        lblTitle.setBackground(new Color(50, 115, 220));
-        lblTitle.setPreferredSize(new Dimension(0, 50));
-        add(lblTitle, BorderLayout.NORTH);
-
-        // INFO PANEL
-        JPanel pnlInfo = new JPanel(new GridLayout(3, 6, 10, 10));
-        pnlInfo.setBorder(BorderFactory.createTitledBorder("Thông tin phiếu"));
-        pnlInfo.setPreferredSize(new Dimension(0, 150));
+        // --- PANEL INPUT (THÔNG TIN) ---
+        JPanel pnlInput = new JPanel(new GridLayout(4, 4, 10, 10));
+        pnlInput.setBorder(new TitledBorder("Thông tin phiếu"));
+        pnlInput.setPreferredSize(new Dimension(0, 150));
 
         txtMaPhieu = new JTextField(); txtMaPhieu.setEditable(false);
-        txtMaDocGia = new JTextField(); txtMaDocGia.setEditable(false);
-        txtTenDocGia = new JTextField(); txtTenDocGia.setEditable(false);
+        txtMaDG = new JTextField(); 
+        txtTenDG = new JTextField(); txtTenDG.setEditable(false);
         txtThuThu = new JTextField(); txtThuThu.setEditable(false);
-        
-        // Ngày mượn là hôm nay, Hạn trả là +7 ngày
-        Date now = new Date();
-        txtNgayMuon = new JTextField(sdf.format(now));
-        txtHanTra = new JTextField(sdf.format(new Date(now.getTime() + (7L * 24 * 60 * 60 * 1000)))); 
-        
+        txtNgayMuon = new JTextField();
+        txtHanTra = new JTextField();
         txtTienPhat = new JTextField("0");
-        cboTinhTrang = new JComboBox<>(new String[]{"Đang mượn", "Đã trả", "Quá hạn"});
-
-        pnlInfo.add(new JLabel("Mã Phiếu:")); pnlInfo.add(txtMaPhieu);
-        pnlInfo.add(new JLabel("Mã Độc Giả:")); pnlInfo.add(txtMaDocGia);
-        pnlInfo.add(new JLabel("Thủ Thư:")); pnlInfo.add(txtThuThu);
         
-        pnlInfo.add(new JLabel("Tên Độc Giả:")); pnlInfo.add(txtTenDocGia);
-        pnlInfo.add(new JLabel("Ngày Mượn:")); pnlInfo.add(txtNgayMuon);
-        pnlInfo.add(new JLabel("Hạn Trả:")); pnlInfo.add(txtHanTra);
+        String[] stt = {"Đang mượn", "Đã trả", "Quá hạn", "Chờ duyệt"};
+        cboTinhTrang = new JComboBox<>(stt);
 
-        pnlInfo.add(new JLabel("Tình Trạng:")); pnlInfo.add(cboTinhTrang);
-        pnlInfo.add(new JLabel("Tiền Phạt (VNĐ):")); pnlInfo.add(txtTienPhat);
-        pnlInfo.add(new JLabel("")); pnlInfo.add(new JLabel(""));
+        pnlInput.add(new JLabel("Mã Phiếu:")); pnlInput.add(txtMaPhieu);
+        pnlInput.add(new JLabel("Mã Độc Giả:")); pnlInput.add(txtMaDG);
+        pnlInput.add(new JLabel("Thủ Thư:")); pnlInput.add(txtThuThu);
+        
+        pnlInput.add(new JLabel("Tên Độc Giả:")); pnlInput.add(txtTenDG);
+        pnlInput.add(new JLabel("Ngày Mượn:")); pnlInput.add(txtNgayMuon);
+        pnlInput.add(new JLabel("Hạn Trả:")); pnlInput.add(txtHanTra);
+        
+        pnlInput.add(new JLabel("Tình Trạng:")); pnlInput.add(cboTinhTrang);
+        pnlInput.add(new JLabel("Tiền Phạt (VNĐ):")); pnlInput.add(txtTienPhat);
 
-        JPanel pnlTop = new JPanel(new BorderLayout());
-        pnlTop.add(lblTitle, BorderLayout.NORTH);
-        pnlTop.add(pnlInfo, BorderLayout.CENTER);
-        add(pnlTop, BorderLayout.NORTH);
+        add(pnlInput, BorderLayout.NORTH);
 
-        // CENTER TABLES
-        JPanel pnlCenter = new JPanel(new GridLayout(1, 3, 10, 10));
-        pnlCenter.setBorder(new EmptyBorder(10, 10, 10, 10));
+        // --- PANEL CENTER (CHỨA 3 BẢNG) ---
+        JPanel pnlCenter = new JPanel(new GridLayout(1, 3, 10, 10)); // Chia làm 3 cột đều nhau
+        pnlCenter.setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        // 1. Chọn Độc Giả
+        // 1. BẢNG ĐỘC GIẢ
         JPanel pnlDG = new JPanel(new BorderLayout());
-        pnlDG.setBorder(BorderFactory.createTitledBorder("1. Chọn Độc Giả"));
-        String[] colDG = {"Mã ĐG", "Tên Độc Giả", "SĐT"};
-        modelDocGia = new DefaultTableModel(colDG, 0) { public boolean isCellEditable(int r, int c) { return false; } };
+        pnlDG.setBorder(new TitledBorder("1. Chọn Độc Giả"));
+        String[] colsDG = {"Mã ĐG", "Tên Độc Giả", "SĐT"};
+        modelDocGia = new DefaultTableModel(colsDG, 0) { public boolean isCellEditable(int r, int c) { return false; } };
         tblDocGia = new JTable(modelDocGia);
         pnlDG.add(new JScrollPane(tblDocGia), BorderLayout.CENTER);
 
-        // 2. Kho Sách
-        JPanel pnlSach = new JPanel(new BorderLayout());
-        pnlSach.setBorder(BorderFactory.createTitledBorder("2. Kho Sách (Nhấn đúp để chọn)"));
-        String[] colSach = {"Mã Sách", "Tên Sách", "Tồn"};
-        modelKhoSach = new DefaultTableModel(colSach, 0) { public boolean isCellEditable(int r, int c) { return false; } };
-        tblKhoSach = new JTable(modelKhoSach);
-        pnlSach.add(new JScrollPane(tblKhoSach), BorderLayout.CENTER);
+        // 2. BẢNG KHO SÁCH
+        JPanel pnlKho = new JPanel(new BorderLayout());
+        pnlKho.setBorder(new TitledBorder("2. Kho Sách (Nhấn đúp để chọn)"));
+        String[] colsKho = {"Mã Sách", "Tên Sách", "Tồn"};
+        modelKho = new DefaultTableModel(colsKho, 0) { public boolean isCellEditable(int r, int c) { return false; } };
+        tblKhoSach = new JTable(modelKho);
+        pnlKho.add(new JScrollPane(tblKhoSach), BorderLayout.CENTER);
 
-        // 3. Sách Mượn
+        // 3. BẢNG SÁCH MƯỢN
         JPanel pnlMuon = new JPanel(new BorderLayout());
-        pnlMuon.setBorder(BorderFactory.createTitledBorder("3. Sách Mượn"));
-        String[] colMuon = {"Mã Sách", "Tên Sách"};
-        modelSachMuon = new DefaultTableModel(colMuon, 0) { public boolean isCellEditable(int r, int c) { return false; } };
-        tblSachMuon = new JTable(modelSachMuon);
-        
+        pnlMuon.setBorder(new TitledBorder("3. Sách Đang Chọn"));
+        String[] colsMuon = {"Mã Sách", "Tên Sách"};
+        modelMuon = new DefaultTableModel(colsMuon, 0) { public boolean isCellEditable(int r, int c) { return false; } };
+        tblSachMuon = new JTable(modelMuon);
         JButton btnXoaSach = new JButton("Xóa khỏi danh sách");
         btnXoaSach.setBackground(new Color(220, 53, 69));
         btnXoaSach.setForeground(Color.WHITE);
         pnlMuon.add(new JScrollPane(tblSachMuon), BorderLayout.CENTER);
         pnlMuon.add(btnXoaSach, BorderLayout.SOUTH);
 
-        pnlCenter.add(pnlDG); pnlCenter.add(pnlSach); pnlCenter.add(pnlMuon);
+        pnlCenter.add(pnlDG);
+        pnlCenter.add(pnlKho);
+        pnlCenter.add(pnlMuon);
         add(pnlCenter, BorderLayout.CENTER);
 
-        // BOTTOM BUTTONS
-        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        JButton btnLuu = new JButton(phieuSua == null ? "Lưu Mới" : "Cập Nhật");
-        btnLuu.setPreferredSize(new Dimension(150, 40));
-        btnLuu.setBackground(new Color(50, 115, 220));
-        btnLuu.setForeground(Color.WHITE);
+        // --- PANEL BOTTOM (BUTTONS) ---
+        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton btnSave = new JButton(isUpdate ? "Cập Nhật" : "Tạo Mới");
+        JButton btnCancel = new JButton("Thoát");
         
-        JButton btnThoat = new JButton("Thoát");
-        btnThoat.setPreferredSize(new Dimension(150, 40));
-        btnThoat.setBackground(Color.WHITE);
+        btnSave.setPreferredSize(new Dimension(120, 40));
+        btnSave.setBackground(new Color(40, 167, 69)); // Xanh lá
+        btnSave.setForeground(Color.WHITE);
 
-        pnlBot.add(btnLuu); pnlBot.add(btnThoat);
+        pnlBot.add(btnSave);
+        pnlBot.add(btnCancel);
         add(pnlBot, BorderLayout.SOUTH);
 
-        // --- EVENTS ---
-        
-        // 1. Chọn Độc Giả
+        // --- LOAD DỮ LIỆU & SỰ KIỆN ---
+        loadDataDocGia();
+        loadDataKhoSach();
+
+        // Sự kiện: Chọn Độc giả từ bảng 1 -> Điền lên TextField
         tblDocGia.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int row = tblDocGia.getSelectedRow();
                 if(row >= 0) {
-                    txtMaDocGia.setText(tblDocGia.getValueAt(row, 0).toString());
-                    txtTenDocGia.setText(tblDocGia.getValueAt(row, 1).toString());
+                    txtMaDG.setText(tblDocGia.getValueAt(row, 0).toString());
+                    txtTenDG.setText(tblDocGia.getValueAt(row, 1).toString());
                 }
             }
         });
 
-        // 2. Chọn Sách (Double Click)
+        // Sự kiện: Chọn Sách từ kho (Double click) -> Sang bảng 3
         tblKhoSach.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) { 
+                if(e.getClickCount() == 2) {
                     int row = tblKhoSach.getSelectedRow();
-                    if (row < 0) return;
-                    String ma = tblKhoSach.getValueAt(row, 0).toString();
-                    String ten = tblKhoSach.getValueAt(row, 1).toString();
-                    int ton = Integer.parseInt(tblKhoSach.getValueAt(row, 2).toString());
-
-                    if (ton <= 0) { JOptionPane.showMessageDialog(null, "Sách này đã hết hàng!"); return; }
-                    
-                    // Kiểm tra trùng
-                    for (int i = 0; i < modelSachMuon.getRowCount(); i++) {
-                        if (modelSachMuon.getValueAt(i, 0).toString().equals(ma)) {
-                            JOptionPane.showMessageDialog(null, "Bạn đã chọn sách này rồi!"); return;
+                    if(row >= 0) {
+                        DTO_Sach s = listKho.get(row);
+                        if(s.getSoLuong() <= 0) {
+                            JOptionPane.showMessageDialog(null, "Sách này đã hết!");
+                            return;
                         }
+                        for(DTO_Sach sm : listMuon) {
+                            if(sm.getMaCuonSach().equals(s.getMaCuonSach())) return;
+                        }
+                        listMuon.add(s);
+                        updateTableMuon();
                     }
-                    // Giới hạn 5 cuốn (hoặc tùy ý)
-                    if(modelSachMuon.getRowCount() >= 5) {
-                        JOptionPane.showMessageDialog(null, "Chỉ được mượn tối đa 5 cuốn!"); return;
-                    }
-                    modelSachMuon.addRow(new Object[]{ma, ten});
                 }
             }
         });
 
-        // 3. Xóa Sách Mượn
+        // Sự kiện: Xóa sách khỏi bảng 3
         btnXoaSach.addActionListener(e -> {
             int row = tblSachMuon.getSelectedRow();
-            if (row >= 0) modelSachMuon.removeRow(row);
-            else JOptionPane.showMessageDialog(this, "Vui lòng chọn sách để xóa!");
-        });
-
-        btnThoat.addActionListener(e -> dispose());
-        
-        // 4. LƯU PHIẾU (QUAN TRỌNG: GỌI DAL THỰC SỰ)
-        btnLuu.addActionListener(e -> {
-            // Validation
-            if(txtMaDocGia.getText().isEmpty()) { JOptionPane.showMessageDialog(this, "Chưa chọn độc giả!"); return; }
-            if(modelSachMuon.getRowCount() == 0) { JOptionPane.showMessageDialog(this, "Chưa chọn sách nào để mượn!"); return; }
-            
-            // Prepare DTO
-            DTO_PhieuMuon pm = new DTO_PhieuMuon();
-            pm.setMaPhieuMuon(txtMaPhieu.getText());
-            pm.setMaDocGia(txtMaDocGia.getText());
-            pm.setMaThuThu(txtThuThu.getText());
-            
-            try {
-                java.util.Date dMuon = sdf.parse(txtNgayMuon.getText());
-                java.util.Date dHan = sdf.parse(txtHanTra.getText());
-                pm.setNgayMuon(new java.sql.Date(dMuon.getTime()));
-                pm.setNgayHenTra(new java.sql.Date(dHan.getTime()));
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Ngày tháng không hợp lệ (dd/MM/yyyy)!"); return;
-            }
-            
-            // Prepare List Sách
-            ArrayList<String> listMaSach = new ArrayList<>();
-            for(int i=0; i<modelSachMuon.getRowCount(); i++) {
-                listMaSach.add(modelSachMuon.getValueAt(i, 0).toString());
-            }
-
-            // GỌI HÀM TRANSACTION CỦA DAL
-            if(phieuSua == null) {
-                // Thêm Mới
-                if(dalPhieu.themPhieuMuon(pm, listMaSach)) {
-                    JOptionPane.showMessageDialog(this, "Tạo phiếu mượn thành công!");
-                    parentGUI.loadData();
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Lưu thất bại! Có lỗi xảy ra.");
-                }
-            } else {
-                // Cập Nhật (Logic này phức tạp hơn, tạm thời chỉ hỗ trợ sửa thông tin chung)
-                // Hoặc bạn có thể implement hàm updatePhieuMuon trong DAL tương tự
-                JOptionPane.showMessageDialog(this, "Chức năng cập nhật chi tiết đang phát triển!");
+            if(row >= 0) {
+                listMuon.remove(row);
+                updateTableMuon();
             }
         });
+
+        // Sự kiện: LƯU
+        btnSave.addActionListener(e -> xuLyLuu());
+        btnCancel.addActionListener(e -> dispose());
     }
 
     private void loadDataDocGia() {
         modelDocGia.setRowCount(0);
-        try {
-            ArrayList<DTO_DocGia> list = dalDocGia.getList(); 
-            for(DTO_DocGia dg : list) modelDocGia.addRow(new Object[]{dg.getMaDocGia(), dg.getTenDocGia(), dg.getSdt()});
-        } catch (Exception e) {}
+        ArrayList<DTO_DocGia> list = dalDG.getList();
+        for(DTO_DocGia d : list) {
+            modelDocGia.addRow(new Object[]{d.getMaDocGia(), d.getTenDocGia(), d.getSdt()});
+        }
     }
 
     private void loadDataKhoSach() {
-        modelKhoSach.setRowCount(0);
-        try {
-            ArrayList<DTO_Sach> list = dalSach.getList();
-            for(DTO_Sach s : list) modelKhoSach.addRow(new Object[]{s.getMaCuonSach(), s.getTenSach(), s.getSoLuong()});
-        } catch(Exception e) {}
+        listKho = dalSach.getList();
+        modelKho.setRowCount(0);
+        for(DTO_Sach s : listKho) {
+            modelKho.addRow(new Object[]{s.getMaCuonSach(), s.getTenSach(), s.getSoLuong()});
+        }
     }
-    
-    private void autoGenMaPhieu() {
-        if(phieuSua == null) {
-            String timeStamp = new SimpleDateFormat("yyMMddHHmm").format(new Date());
-            txtMaPhieu.setText("PM" + timeStamp);
+
+    private void updateTableMuon() {
+        modelMuon.setRowCount(0);
+        for(DTO_Sach s : listMuon) {
+            modelMuon.addRow(new Object[]{s.getMaCuonSach(), s.getTenSach()});
+        }
+    }
+
+    private void xuLyLuu() {
+        // Kiểm tra dữ liệu đầu vào
+        if(txtMaDG.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Chưa chọn độc giả!");
+            return;
+        }
+        if(listMuon.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Chưa chọn sách nào!");
+            return;
+        }
+        
+        DTO_PhieuMuon pm = new DTO_PhieuMuon();
+        pm.setMaPhieuMuon(txtMaPhieu.getText());
+        pm.setMaDocGia(txtMaDG.getText());
+        pm.setMaThuThu(txtThuThu.getText()); 
+        pm.setNgayMuon(Date.valueOf(txtNgayMuon.getText()));
+        pm.setNgayHenTra(Date.valueOf(txtHanTra.getText()));
+        pm.setTinhTrang(cboTinhTrang.getSelectedItem().toString());
+        try {
+            pm.setTienPhat(Double.parseDouble(txtTienPhat.getText()));
+        } catch(Exception e) { pm.setTienPhat(0); }
+
+        ArrayList<String> dsMaSach = new ArrayList<>();
+        for(DTO_Sach s : listMuon) dsMaSach.add(s.getMaCuonSach());
+
+        boolean kq;
+        if(isUpdate) {
+            // Gọi hàm Cập nhật
+            kq = dalPM.suaPhieuMuon(pm); 
+        } else {
+            // Gọi hàm Thêm mới
+            kq = dalPM.themPhieuMuon(pm, dsMaSach);
+        }
+
+        if(kq) {
+            JOptionPane.showMessageDialog(this, "Thành công!");
+            dispose();
+        } else {
+            // Nếu vẫn lỗi, khả năng cao do chưa chạy lệnh SQL ở Phần 1
+            JOptionPane.showMessageDialog(this, "Thất bại! Kiểm tra lại mã ĐG hoặc xem lại User đăng nhập đã có trong bảng ThuThu chưa.");
         }
     }
 }

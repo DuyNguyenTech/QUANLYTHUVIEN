@@ -138,9 +138,9 @@ public class GUI_Main extends JFrame {
             panelList.add(createMenuButton("Quản Lý Độc Giả"));
             panelList.add(createMenuButton("Quản Lý Mượn Trả"));
             
-            // Chỉ ADMIN mới thấy Quản Lý Nhân Viên
+            // Chỉ ADMIN mới thấy Quản Lý Nhân Viên -> Sửa thành Quản Lý Thủ Thư
             if (taiKhoan.getPhanQuyen() == 1) {
-                panelList.add(createMenuButton("Quản Lý Nhân Viên"));
+                panelList.add(createMenuButton("Quản Lý Thủ Thư")); 
             }
 
             // Cả Admin và Thủ thư đều thấy Thống Kê
@@ -330,13 +330,12 @@ public class GUI_Main extends JFrame {
                 panelContent.add(new GUI_QuanLyTheLoai());                
                 break;
             case "Quản Lý Độc Giả":
-                panelContent.add(new GUI_QuanLyDocGia());                    
+                panelContent.add(new GUI_QuanLyDocGia());                     
                 break;
             case "Quản Lý Mượn Trả":
                 panelContent.add(new GUI_QuanLyMuonTra());
                 break;
-            case "Quản Lý Nhân Viên": 
-                // Chỉ Admin mới vào được case này (do nút đã ẩn với user thường)
+            case "Quản Lý Thủ Thư": 
                 panelContent.add(new GUI_QuanLyNhanVien());
                 break;
             case "Thống Kê": 
@@ -346,14 +345,11 @@ public class GUI_Main extends JFrame {
                 panelContent.add(new GUI_TraCuuSach());
                 break;
             case "Lịch Sử Mượn":
-                // Lấy mã độc giả từ đối tượng TaiKhoan đang đăng nhập
                 String maDocGia = taiKhoan.getMaDocGia(); 
-                panelContent.add(new GUI_LichSuMuon(maDocGia)); // Truyền mã vào đây
+                panelContent.add(new GUI_LichSuMuon(maDocGia)); 
                 break;
             case "Thông Tin Cá Nhân":
-                // Lấy mã độc giả từ tài khoản đang đăng nhập
-                String maDG = taiKhoan.getMaDocGia(); 
-                panelContent.add(new GUI_ThongTinCaNhan(taiKhoan.getMaDocGia(), taiKhoan.getUserName()));               
+                panelContent.add(new GUI_ThongTinCaNhan(taiKhoan.getMaDocGia(), taiKhoan.getUserName()));                
                 break;
             default:
                 panelContent.add(createPlaceholder("Chức năng: " + menuName));
@@ -372,5 +368,10 @@ public class GUI_Main extends JFrame {
         lbl.setForeground(new Color(200, 200, 200));
         p.add(lbl);
         return p;
+    }
+
+    // [MỚI] Hàm này để các form con lấy thông tin người đang đăng nhập
+    public TaiKhoan getTaiKhoan() {
+        return this.taiKhoan;
     }
 }

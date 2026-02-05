@@ -1,28 +1,26 @@
 package com.qlthuvien.GUI;
 
-import com.qlthuvien.DAL.DAL_PhieuMuon; // [MỚI] Import DAL Phiếu
+import com.qlthuvien.DAL.DAL_PhieuMuon;
 import com.qlthuvien.DAL.DAL_ThongKe;
 import com.qlthuvien.DTO.DTO_PhieuMuon;
+import com.qlthuvien.UTIL.ExcelExporter; // [MỚI] Import bộ xuất Excel
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.MouseAdapter; // [MỚI]
-import java.awt.event.MouseEvent;   // [MỚI]
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.text.DecimalFormat; // Dùng format tiền đẹp hơn
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class GUI_DialogThongKeViPham extends JDialog {
 
     private DAL_ThongKe dal = new DAL_ThongKe();
-    private DAL_PhieuMuon dalPhieu = new DAL_PhieuMuon(); // [MỚI] Khai báo để lấy chi tiết
+    private DAL_PhieuMuon dalPhieu = new DAL_PhieuMuon();
     
     private JTable table;
     private DefaultTableModel model;
@@ -87,10 +85,10 @@ public class GUI_DialogThongKeViPham extends JDialog {
             }
         });
 
-        // Footer (Tổng số - Trang trí đồng bộ)
+        // Footer (Tổng số)
         JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlFooter.setBackground(new Color(255, 250, 240)); // Màu kem
-        pnlFooter.setBorder(BorderFactory.createLineBorder(Color.ORANGE)); // Viền cam
+        pnlFooter.setBackground(new Color(255, 250, 240)); 
+        pnlFooter.setBorder(BorderFactory.createLineBorder(Color.ORANGE));
         
         JLabel lblText = new JLabel("Tổng số trường hợp vi phạm: ");
         lblText.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -109,31 +107,29 @@ public class GUI_DialogThongKeViPham extends JDialog {
 
         // BOTTOM BUTTON
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnXuat = new JButton("Xuất File");
+        JButton btnXuat = new JButton("Xuất Excel"); // Đổi tên nút cho đúng chức năng
         btnXuat.setPreferredSize(new Dimension(150, 35));
-        btnXuat.setBackground(Color.WHITE);
+        btnXuat.setBackground(new Color(40, 167, 69)); // Màu xanh Excel
+        btnXuat.setForeground(Color.WHITE);
         btnXuat.setFont(new Font("Segoe UI", Font.BOLD, 12));
         
         pnlBot.add(btnXuat);
         add(pnlBot, BorderLayout.SOUTH);
 
+        // SỰ KIỆN XUẤT FILE
         btnXuat.addActionListener(e -> xuLyXuatFile());
 
-        // [QUAN TRỌNG] THÊM SỰ KIỆN CLICK ĐÚP CHUỘT
+        // SỰ KIỆN CLICK ĐÚP CHUỘT (Giữ nguyên tính năng này)
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) { // Nhấn đúp
                     int row = table.getSelectedRow();
                     if (row >= 0) {
-                        // 1. Lấy Mã Phiếu
                         String maPhieu = table.getValueAt(row, 0).toString();
-                        
-                        // 2. Gọi DAL lấy thông tin chi tiết (bao gồm cả MaDocGia)
                         DTO_PhieuMuon pmFull = dalPhieu.getPhieuByMa(maPhieu);
                         
                         if (pmFull != null) {
-                            // 3. Mở form chi tiết (Form này sẽ hiện Tên Độc Giả, Sách...)
                             new GUI_DialogChiTietPhieuMuon(GUI_DialogThongKeViPham.this, pmFull).setVisible(true);
                         } else {
                             JOptionPane.showMessageDialog(GUI_DialogThongKeViPham.this, "Không tìm thấy dữ liệu!");
@@ -150,7 +146,6 @@ public class GUI_DialogThongKeViPham extends JDialog {
         
         for (DTO_PhieuMuon pm : list) {
             String henTra = (pm.getNgayHenTra() != null) ? sdf.format(pm.getNgayHenTra()) : "";
-            // Format tiền đẹp hơn
             String phat = df.format(pm.getTienPhat());
             
             model.addRow(new Object[]{
@@ -165,24 +160,13 @@ public class GUI_DialogThongKeViPham extends JDialog {
         lblTongViPham.setText(String.valueOf(list.size()) + " trường hợp");
     }
 
+    // [CẬP NHẬT] Sử dụng ExcelExporter thay vì xuất file .txt
     private void xuLyXuatFile() {
-        try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String path = System.getProperty("user.home") + File.separator + "Desktop" + File.separator + "Log_ViPham_" + timeStamp + ".txt";
-            PrintWriter pw = new PrintWriter(new FileWriter(path));
-            pw.println("THỐNG KÊ VI PHẠM - " + new Date());
-            pw.println("Tổng số vi phạm: " + lblTongViPham.getText());
-            pw.println("--------------------------------------------------------------------------------");
-            pw.printf("%-10s %-15s %-15s %-10s %-25s %-15s\n", "MÃ PM", "MƯỢN", "HẸN TRẢ", "MÃ ĐG", "LỖI", "PHẠT");
-            pw.println("--------------------------------------------------------------------------------");
-            
-            for(int i=0; i<model.getRowCount(); i++) {
-                pw.printf("%-10s %-15s %-15s %-10s %-25s %-15s\n", 
-                    model.getValueAt(i, 0), model.getValueAt(i, 1), model.getValueAt(i, 2), 
-                    model.getValueAt(i, 3), model.getValueAt(i, 4), model.getValueAt(i, 5));
-            }
-            pw.close();
-            JOptionPane.showMessageDialog(this, "Đã lưu file tại: " + path);
-        } catch (Exception e) { e.printStackTrace(); }
+        if (table.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        // Gọi class tiện ích ExcelExporter
+        new ExcelExporter().exportTable(table);
     }
 }

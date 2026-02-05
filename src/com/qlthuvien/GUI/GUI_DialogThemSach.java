@@ -1,12 +1,14 @@
 package com.qlthuvien.GUI;
 
 import com.qlthuvien.DAL.DAL_Sach;
-import com.qlthuvien.DAL.DAL_TheLoai; // Import thêm cái này
+import com.qlthuvien.DAL.DAL_TheLoai; 
 import com.qlthuvien.DTO.DTO_Sach;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.KeyAdapter; // Import thêm
+import java.awt.event.KeyEvent;   // Import thêm
 import java.io.File;
 import java.util.ArrayList;
 
@@ -15,11 +17,11 @@ public class GUI_DialogThemSach extends JDialog {
     private GUI_QuanLySach parentGUI;
     private String maSachSua = null;
     private DAL_Sach dal = new DAL_Sach();
-    private DAL_TheLoai dalTheLoai = new DAL_TheLoai(); // Gọi DAL Thể Loại
+    private DAL_TheLoai dalTheLoai = new DAL_TheLoai(); 
     
     private JTextField txtMa, txtTen, txtTacGia, txtNXB, txtNamXB, txtGia, txtSoLuong;
-    private JComboBox<String> cboTheLoai; // Sửa thành ComboBox
-    private JComboBox<String> cboTrangThai; // Thêm ComboBox Trạng thái
+    private JComboBox<String> cboTheLoai; 
+    private JComboBox<String> cboTrangThai; 
     private JTextArea txtMoTa;
     private JLabel lblHinhAnh;
     private String duongDanAnh = "";
@@ -29,7 +31,7 @@ public class GUI_DialogThemSach extends JDialog {
         this.parentGUI = parentGUI;
         this.maSachSua = maSachSua;
         initUI();
-        loadComboboxTheLoai(); // Load dữ liệu vào ComboBox
+        loadComboboxTheLoai(); 
         if(maSachSua != null) loadDataSua();
     }
 
@@ -158,6 +160,9 @@ public class GUI_DialogThemSach extends JDialog {
         btnLuu.addActionListener(e -> xuLyLuu());
         btnLamMoi.addActionListener(e -> xoaForm());
         btnHuy.addActionListener(e -> dispose());
+
+        // --- [MỚI] KÍCH HOẠT PHÍM ENTER ---
+        setupEnterNavigation();
     }
 
     private void styleButton(JButton btn, Color bg) {
@@ -166,6 +171,26 @@ public class GUI_DialogThemSach extends JDialog {
         btn.setForeground(Color.WHITE);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setFocusPainted(false);
+    }
+
+    // --- [MỚI] HÀM XỬ LÝ PHÍM ENTER ---
+    private void setupEnterNavigation() {
+        // Danh sách các Textfield theo thứ tự nhập liệu
+        JTextField[] fields = {txtMa, txtTen, txtTacGia, txtGia, txtNamXB, txtNXB, txtSoLuong};
+        
+        for (JTextField tf : fields) {
+            tf.addActionListener(e -> tf.transferFocus()); // Nhấn Enter sẽ chuyển focus sang ô kế tiếp
+        }
+
+        // Xử lý riêng cho ComboBox (vì nó dùng KeyListener)
+        cboTheLoai.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    cboTheLoai.transferFocus();
+                }
+            }
+        });
     }
 
     // Load danh sách thể loại từ DB lên ComboBox
@@ -205,16 +230,14 @@ public class GUI_DialogThemSach extends JDialog {
             txtSoLuong.setText(String.valueOf(s.getSoLuong()));
             txtMoTa.setText(s.getMoTa());
             
-            // Chọn đúng thể loại trong ComboBox
             for(int i=0; i<cboTheLoai.getItemCount(); i++) {
                 String item = cboTheLoai.getItemAt(i);
-                if(item.startsWith(s.getMaTheLoai())) { // So sánh mã đầu chuỗi
+                if(item.startsWith(s.getMaTheLoai())) { 
                     cboTheLoai.setSelectedIndex(i);
                     break;
                 }
             }
 
-            // Load ảnh
             duongDanAnh = s.getHinhAnh();
             if(duongDanAnh != null && !duongDanAnh.isEmpty()) {
                 try {
@@ -240,13 +263,12 @@ public class GUI_DialogThemSach extends JDialog {
         s.setTacGia(txtTacGia.getText());
         s.setNhaXuatBan(txtNXB.getText());
         s.setMoTa(txtMoTa.getText());
-        s.setHinhAnh(duongDanAnh); // Lưu đường dẫn
+        s.setHinhAnh(duongDanAnh); 
         
-        // Lấy Mã Thể Loại từ ComboBox (Chuỗi dạng "TL01 - Truyện")
         String selectedTL = (String) cboTheLoai.getSelectedItem();
         if(selectedTL != null) {
             String[] parts = selectedTL.split(" - ");
-            s.setMaTheLoai(parts[0].trim()); // Chỉ lấy phần mã "TL01"
+            s.setMaTheLoai(parts[0].trim()); 
         } else {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn thể loại!");
             return;
@@ -261,21 +283,21 @@ public class GUI_DialogThemSach extends JDialog {
         }
 
         boolean kq;
-        if(maSachSua == null) { // THÊM
+        if(maSachSua == null) { 
             if(dal.hasMaSach(s.getMaCuonSach())) {
                 JOptionPane.showMessageDialog(this, "Mã sách đã tồn tại!"); return;
             }
             kq = dal.addSach(s);
-        } else { // SỬA
+        } else { 
             kq = dal.updateSach(s);
         }
 
         if(kq) {
-            JOptionPane.showMessageDialog(this, "Thao tác thành công!");
+            String msg = (maSachSua == null) ? "Thêm sách thành công!" : "Cập nhật thành công!";
+            JOptionPane.showMessageDialog(this, msg);
             parentGUI.loadData();
             dispose();
         } else {
-            // In lỗi ra console để debug nếu cần
             System.err.println("Thêm thất bại. Kiểm tra lại CSDL xem có đủ cột MoTa, HinhAnh chưa.");
             JOptionPane.showMessageDialog(this, "Thao tác thất bại! Kiểm tra lại thông tin.");
         }

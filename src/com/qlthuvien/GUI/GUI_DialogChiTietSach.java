@@ -38,7 +38,7 @@ public class GUI_DialogChiTietSach extends JDialog {
 
         // --- BÊN PHẢI: THÔNG TIN (NỀN XANH) ---
         pnlInfo = new JPanel(new GridBagLayout());
-        pnlInfo.setBackground(new Color(100, 149, 237)); // Màu xanh dịu
+        pnlInfo.setBackground(new Color(100, 149, 237)); // Màu xanh dịu (Cornflower Blue)
         pnlInfo.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // Container chính
@@ -62,7 +62,7 @@ public class GUI_DialogChiTietSach extends JDialog {
             }
         }
 
-        // Load thông tin (Dùng GridBagLayout cho đẹp)
+        // Load thông tin
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -81,7 +81,7 @@ public class GUI_DialogChiTietSach extends JDialog {
         gbc.gridx = 0; gbc.gridy = 9;
         JLabel lblMoTa = new JLabel("Mô tả:");
         lblMoTa.setForeground(Color.WHITE);
-        lblMoTa.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblMoTa.setFont(new Font("Segoe UI", Font.BOLD, 14)); // Tiêu đề vẫn in đậm
         pnlInfo.add(lblMoTa, gbc);
         
         gbc.gridx = 1; gbc.gridy = 9; gbc.weighty = 1.0; gbc.fill = GridBagConstraints.BOTH;
@@ -89,21 +89,32 @@ public class GUI_DialogChiTietSach extends JDialog {
         txtMoTa.setWrapStyleWord(true);
         txtMoTa.setLineWrap(true);
         txtMoTa.setEditable(false);
+        txtMoTa.setFont(new Font("Segoe UI", Font.PLAIN, 14)); // Nội dung mô tả font thường
         pnlInfo.add(new JScrollPane(txtMoTa), gbc);
     }
 
     private void addRow(int row, String label, String value, GridBagConstraints gbc) {
+        // Cột 1: Label (Tiêu đề) - Giữ in đậm
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.weighty = 0;
         JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14)); 
         lbl.setForeground(Color.WHITE);
         pnlInfo.add(lbl, gbc);
 
+        // Cột 2: Value (Nội dung) - CHUYỂN VỀ FONT THƯỜNG
         gbc.gridx = 1; gbc.weightx = 1.0;
         JTextField txt = new JTextField(value);
-        txt.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        
+        // --- [SỬA LẠI]: Dùng Font.PLAIN thay vì Font.BOLD ---
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14)); 
+        
         txt.setEditable(false);
         txt.setBackground(Color.WHITE);
+        // Thêm padding cho Textfield nhìn thoáng hơn
+        txt.setBorder(BorderFactory.createCompoundBorder(
+            txt.getBorder(), 
+            BorderFactory.createEmptyBorder(2, 5, 2, 5)));
+            
         pnlInfo.add(txt, gbc);
     }
 }

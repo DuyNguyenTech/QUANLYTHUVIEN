@@ -40,7 +40,7 @@ public class GUI_DialogThemDocGia extends JDialog {
         Color headerColor = docGiaEdit == null ? new Color(50, 115, 220) : new Color(255, 152, 0);
 
         JLabel lblHeader = new JLabel(title, SwingConstants.CENTER);
-        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 22)); // Header vẫn giữ đậm cho nổi bật
         lblHeader.setOpaque(true);
         lblHeader.setBackground(headerColor);
         lblHeader.setForeground(Color.WHITE);
@@ -98,7 +98,6 @@ public class GUI_DialogThemDocGia extends JDialog {
         add(pnlButton, BorderLayout.SOUTH);
 
         // --- XỬ LÝ PHÍM ENTER THÔNG MINH ---
-        // Với các ô thông tin thường: Enter = Tab (Chuyển xuống ô dưới)
         setupEnterKey(txtMa, txtTen);
         setupEnterKey(txtTen, txtLop);
         setupEnterKey(txtLop, txtDiaChi);
@@ -121,12 +120,21 @@ public class GUI_DialogThemDocGia extends JDialog {
     private void addInputRow(JPanel p, GridBagConstraints gbc, int row, String label, JTextField txt) {
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0;
         JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        
+        // --- [SỬA LẠI]: Font thường (PLAIN) thay vì BOLD ---
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14)); 
+        
         p.add(lbl, gbc);
 
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
         txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txt.setPreferredSize(new Dimension(220, 35));
+        
+        // Thêm padding cho textfield nhìn đẹp hơn
+        txt.setBorder(BorderFactory.createCompoundBorder(
+            txt.getBorder(), 
+            BorderFactory.createEmptyBorder(2, 5, 2, 5)));
+            
         p.add(txt, gbc);
     }
 

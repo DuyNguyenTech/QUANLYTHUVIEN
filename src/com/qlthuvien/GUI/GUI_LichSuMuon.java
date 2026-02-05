@@ -1,12 +1,14 @@
 package com.qlthuvien.GUI;
 
-import com.qlthuvien.DAL.DAL_LichSuMuon;
+import com.qlthuvien.DAL.DAL_PhieuMuon; // [SỬA] Dùng DAL_PhieuMuon
+import com.qlthuvien.DTO.DTO_PhieuMuon;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class GUI_LichSuMuon extends JPanel {
@@ -16,8 +18,9 @@ public class GUI_LichSuMuon extends JPanel {
     
     private JTable table;
     private DefaultTableModel model;
-    private DAL_LichSuMuon dal = new DAL_LichSuMuon();
-    private String currentMaDocGia; // Mã độc giả đang đăng nhập
+    private DAL_PhieuMuon dal = new DAL_PhieuMuon(); // [SỬA]
+    private String currentMaDocGia; 
+    private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
     // Constructor nhận vào Mã Độc Giả
     public GUI_LichSuMuon(String maDocGia) {
@@ -82,15 +85,16 @@ public class GUI_LichSuMuon extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 String status = (value != null) ? value.toString() : "";
-                if (status.contains("Đang mượn")) {
+                c.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                
+                if (status.equals("Đang mượn")) {
                     c.setForeground(new Color(0, 123, 255)); // Xanh dương
-                    c.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                } else if (status.contains("Quá hạn") || status.contains("Mất")) {
+                } else if (status.equals("Chờ duyệt")) {
+                    c.setForeground(new Color(255, 152, 0)); // Cam (Màu cho trạng thái ONLINE)
+                } else if (status.equals("Quá hạn")) {
                     c.setForeground(Color.RED);
-                    c.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 } else {
                     c.setForeground(new Color(40, 167, 69)); // Xanh lá (Đã trả)
-                    c.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 }
                 setHorizontalAlignment(JLabel.CENTER);
                 return c;
@@ -124,9 +128,22 @@ public class GUI_LichSuMuon extends JPanel {
         model.setRowCount(0);
         if (currentMaDocGia == null || currentMaDocGia.isEmpty()) return;
 
-        ArrayList<Object[]> list = dal.getLichSuMuon(currentMaDocGia);
-        for (Object[] row : list) {
-            model.addRow(row);
+        // [SỬA LẠI] Gọi hàm getLichSuMuon từ DAL_PhieuMuon
+        ArrayList<DTO_PhieuMuon> list = dal.getLichSuMuon(currentMaDocGia);
+        
+        for (DTO_PhieuMuon pm : list) {
+            String ngayTra = (pm.getNgayTra() != null) ? sdf.format(pm.getNgayTra()) : "Chưa trả";
+            String tienPhat = (pm.getTienPhat() > 0) ? String.format("%,.0f", pm.getTienPhat()) : "-";
+            
+            model.addRow(new Object[]{
+                pm.getMaPhieuMuon(),
+                pm.getTenSach(), // Đã có nhờ update DTO
+                sdf.format(pm.getNgayMuon()),
+                sdf.format(pm.getNgayHenTra()),
+                ngayTra,
+                pm.getTinhTrang(), // Sẽ hiện "Chờ duyệt" nếu MaThuThu là ONLINE
+                tienPhat
+            });
         }
     }
 }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class DAL_Sach {
 
-    // 1. LẤY DANH SÁCH (JOIN để lấy Tên Thể Loại)
+    // 1. LẤY DANH SÁCH
     public ArrayList<DTO_Sach> getList() {
         ArrayList<DTO_Sach> list = new ArrayList<>();
         String sql = "SELECT s.*, tl.TenTheLoai FROM sach s LEFT JOIN the_loai tl ON s.MaTheLoai = tl.MaTheLoai";
@@ -19,24 +19,51 @@ public class DAL_Sach {
         return list;
     }
 
-    // 2. SEARCH (Dùng cho Admin)
-    public ArrayList<DTO_Sach> searchSach(String keyword) {
+    // 2. SEARCH (NÂNG CẤP: Hỗ trợ lọc theo tiêu chí)
+    public ArrayList<DTO_Sach> searchSach(String keyword, String luaChon) {
         ArrayList<DTO_Sach> list = new ArrayList<>();
         String sql = "SELECT s.*, tl.TenTheLoai FROM sach s " +
-                     "LEFT JOIN the_loai tl ON s.MaTheLoai = tl.MaTheLoai " +
-                     "WHERE s.MaCuonSach LIKE ? OR s.TenSach LIKE ? OR s.TacGia LIKE ?";
+                     "LEFT JOIN the_loai tl ON s.MaTheLoai = tl.MaTheLoai WHERE ";
+
+        // Xử lý câu SQL dựa trên lựa chọn từ ComboBox
+        if (luaChon.equals("Mã sách")) {
+            sql += "s.MaCuonSach LIKE ?";
+        } else if (luaChon.equals("Tên sách")) {
+            sql += "s.TenSach LIKE ?";
+        } else if (luaChon.equals("Tác giả")) {
+            sql += "s.TacGia LIKE ?";
+        } else {
+            // Mặc định: Tất cả (Tìm trên cả 3 trường)
+            sql += "(s.MaCuonSach LIKE ? OR s.TenSach LIKE ? OR s.TacGia LIKE ?)";
+        }
+
         try (Connection conn = new DBConnect().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            
             String q = "%" + keyword + "%";
-            ps.setString(1, q); ps.setString(2, q); ps.setString(3, q);
+            
+            if (luaChon.equals("Tất cả")) {
+                // Nếu tìm tất cả thì set 3 tham số
+                ps.setString(1, q);
+                ps.setString(2, q);
+                ps.setString(3, q);
+            } else {
+                // Nếu tìm cụ thể thì chỉ set 1 tham số
+                ps.setString(1, q);
+            }
+
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(getFromResultSet(rs));
         } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
     
-    // Alias cho Độc giả (Để tương thích code cũ)
-    public ArrayList<DTO_Sach> timKiem(String k) { return searchSach(k); }
+    // Giữ lại hàm cũ (Overload) để tránh lỗi ở các module khác (như Độc giả)
+    public ArrayList<DTO_Sach> searchSach(String keyword) {
+        return searchSach(keyword, "Tất cả");
+    }
+    
+    public ArrayList<DTO_Sach> timKiem(String k) { return searchSach(k, "Tất cả"); }
 
     // 3. GET DETAIL
     public DTO_Sach getDetail(String maSach) {
@@ -94,7 +121,7 @@ public class DAL_Sach {
         return false;
     }
 
-    // HÀM MAP DỮ LIỆU AN TOÀN (Tránh lỗi nếu DB thiếu cột)
+    // HÀM MAP DỮ LIỆU
     private DTO_Sach getFromResultSet(ResultSet rs) throws Exception {
         DTO_Sach s = new DTO_Sach();
         s.setMaCuonSach(rs.getString("MaCuonSach"));

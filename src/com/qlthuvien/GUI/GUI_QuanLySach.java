@@ -32,9 +32,7 @@ public class GUI_QuanLySach extends JPanel {
         setLayout(new BorderLayout());
         setBackground(bgColor);
 
-        // ========================================================================
-        // --- 1. HEADER ---
-        // ========================================================================
+        // --- HEADER ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setBackground(Color.WHITE);
         pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
@@ -48,9 +46,12 @@ public class GUI_QuanLySach extends JPanel {
         
         cboLoc = new JComboBox<>(new String[]{"Tất cả", "Mã sách", "Tên sách", "Tác giả"});
         cboLoc.setPreferredSize(new Dimension(120, 35));
+        cboLoc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         
         txtTimKiem = new JTextField();
         txtTimKiem.setPreferredSize(new Dimension(300, 35));
+        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtTimKiem.setToolTipText("Nhập từ khóa và nhấn Enter để tìm");
         
         JButton btnTim = createButton("Tìm kiếm", mainColor, Color.WHITE);
         JButton btnLamMoi = createButton("Làm Mới", new Color(108, 117, 125), Color.WHITE);
@@ -68,9 +69,7 @@ public class GUI_QuanLySach extends JPanel {
         
         add(pnlTop, BorderLayout.NORTH);
 
-        // ========================================================================
-        // --- 2. CENTER (TABLE) ---
-        // ========================================================================
+        // --- TABLE ---
         JPanel pnlTable = new JPanel(new BorderLayout());
         pnlTable.setBorder(new EmptyBorder(10, 20, 10, 20));
         pnlTable.setBackground(bgColor);
@@ -113,16 +112,15 @@ public class GUI_QuanLySach extends JPanel {
         pnlTable.add(new JScrollPane(tableSach), BorderLayout.CENTER);
         add(pnlTable, BorderLayout.CENTER);
 
-        // ========================================================================
-        // --- 3. FOOTER (BUTTONS - ĐÃ BỎ NÚT THOÁT) ---
-        // ========================================================================
+        // --- FOOTER BUTTONS ---
         JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
         pnlFooter.setBackground(bgColor);
 
         JButton btnThem = createButton("Thêm Sách", new Color(40, 167, 69), Color.WHITE);
         btnThem.setPreferredSize(new Dimension(150, 45));
 
-        JButton btnSua = createButton("Sửa Sách", new Color(255, 193, 7), Color.BLACK);
+        // --- [ĐÃ SỬA]: Đổi chữ thành màu TRẮNG (Color.WHITE) ---
+        JButton btnSua = createButton("Sửa Sách", new Color(255, 193, 7), Color.WHITE);
         btnSua.setPreferredSize(new Dimension(150, 45));
 
         JButton btnChiTiet = createButton("Xem Chi Tiết", new Color(23, 162, 184), Color.WHITE);
@@ -135,13 +133,19 @@ public class GUI_QuanLySach extends JPanel {
         pnlFooter.add(btnSua);
         pnlFooter.add(btnChiTiet);
         pnlFooter.add(btnXoa);
-        // Đã xóa nút btnThoat
 
         add(pnlFooter, BorderLayout.SOUTH);
 
-        // ========================================================================
-        // --- 4. EVENTS ---
-        // ========================================================================
+        // --- EVENTS ---
+        
+        txtTimKiem.addActionListener(e -> xuLyTimKiem());
+        btnTim.addActionListener(e -> xuLyTimKiem());
+        
+        btnLamMoi.addActionListener(e -> { 
+            txtTimKiem.setText(""); 
+            cboLoc.setSelectedIndex(0); 
+            loadData(); 
+        });
         
         btnThem.addActionListener(e -> new GUI_DialogThemSach(SwingUtilities.getWindowAncestor(this), GUI_QuanLySach.this, null).setVisible(true));
         
@@ -161,13 +165,6 @@ public class GUI_QuanLySach extends JPanel {
 
         btnXoa.addActionListener(e -> xuLyXoa());
         
-        btnTim.addActionListener(e -> xuLyTimKiem());
-        
-        btnLamMoi.addActionListener(e -> { 
-            txtTimKiem.setText(""); 
-            loadData(); 
-        });
-        
         tableSach.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount() == 2) btnChiTiet.doClick();
@@ -184,32 +181,38 @@ public class GUI_QuanLySach extends JPanel {
     private void themDongVaoBang(DTO_Sach s) {
         String trangThai = (s.getSoLuong() > 0) ? "Còn sẵn" : "Hết hàng";
         String tenTL = (s.getTenTheLoai() != null && !s.getTenTheLoai().isEmpty()) ? s.getTenTheLoai() : s.getMaTheLoai();
+        
         modelSach.addRow(new Object[] {
             s.getMaCuonSach(), s.getMaCuonSach(), s.getTenSach(), tenTL,
             s.getTacGia(), s.getNamXuatBan(), String.format("%,.0f", s.getGia()), trangThai
         });
     }
 
+    private void xuLyTimKiem() {
+        String key = txtTimKiem.getText().trim();
+        String luaChon = cboLoc.getSelectedItem().toString(); 
+        
+        if (key.isEmpty()) { loadData(); return; }
+        
+        modelSach.setRowCount(0);
+        ArrayList<DTO_Sach> list = dal.searchSach(key, luaChon);
+        
+        for (DTO_Sach s : list) themDongVaoBang(s);
+    }
+
     private void xuLyXoa() {
         int row = tableSach.getSelectedRow();
         if (row < 0) { JOptionPane.showMessageDialog(this, "Chọn sách cần xóa!"); return; }
         String ma = tableSach.getValueAt(row, 0).toString();
-        if (JOptionPane.showConfirmDialog(this, "Xác nhận xóa?", "Thông báo", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+        
+        if (JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa cuốn sách này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             if (dal.deleteSach(ma)) {
                 JOptionPane.showMessageDialog(this, "Xóa thành công!");
                 loadData();
             } else {
-                JOptionPane.showMessageDialog(this, "Xóa thất bại!");
+                JOptionPane.showMessageDialog(this, "Xóa thất bại! (Sách có thể đang được mượn)");
             }
         }
-    }
-
-    private void xuLyTimKiem() {
-        String key = txtTimKiem.getText().trim();
-        if (key.isEmpty()) { loadData(); return; }
-        modelSach.setRowCount(0);
-        ArrayList<DTO_Sach> list = dal.searchSach(key);
-        for (DTO_Sach s : list) themDongVaoBang(s);
     }
 
     private JButton createButton(String text, Color bg, Color fg) {

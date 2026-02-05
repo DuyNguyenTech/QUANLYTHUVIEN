@@ -4,9 +4,10 @@ import com.qlthuvien.DAL.DAL_ThuThu;
 import com.qlthuvien.DTO.DTO_ThuThu;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.sql.Date;
+import java.awt.event.ActionEvent; // Added import
+import java.awt.event.ActionListener; // Added import
 
 public class GUI_DialogNhanVien extends JDialog {
 
@@ -100,6 +101,33 @@ public class GUI_DialogNhanVien extends JDialog {
 
         pnlBot.add(btnLuu); pnlBot.add(btnHuy);
         add(pnlBot, BorderLayout.SOUTH);
+
+        // --- [NEW] Setup Enter Navigation ---
+        setupEnterNavigation();
+    }
+
+    // --- [NEW] Method to handle Enter key navigation ---
+    private void setupEnterNavigation() {
+        // Helper to add Enter listener
+        ActionListener nextFocusAction = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((JComponent)e.getSource()).transferFocus();
+            }
+        };
+
+        // Chain the fields: Ten -> DiaChi -> SDT -> User -> Pass -> Save
+        txtTen.addActionListener(nextFocusAction);
+        // Note: Spinners and ComboBoxes handle focus differently or naturally with Tab, 
+        // strictly for TextFields ActionListener works best for Enter.
+        // We can manually chain the TextFields that are likely to be typed in sequence.
+        
+        txtDiaChi.addActionListener(nextFocusAction);
+        txtSDT.addActionListener(nextFocusAction);
+        txtUser.addActionListener(nextFocusAction);
+        
+        // For the last field (Password), Enter can trigger the Save action
+        txtPass.addActionListener(e -> xuLyLuu());
     }
 
     private void xuLyLuu() {

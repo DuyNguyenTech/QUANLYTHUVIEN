@@ -3,18 +3,19 @@ package com.qlthuvien.DTO;
 import java.sql.Date;
 
 public class DTO_PhieuMuon {
-    private String maPhieuMuon; // SQL: MaPhieuMuon
+    private String maPhieuMuon; 
     private String maDocGia;
-    private String maThuThu;    // SQL: MaThuThu
+    private String maThuThu;    
     private Date ngayMuon;
-    private Date ngayHenTra;    // SQL: NgayHenTra
-    private Date ngayTra;       // Mới thêm
+    private Date ngayHenTra;    
+    private Date ngayTra;       
     private String tinhTrang;
-    private double tienPhat;    // Mới thêm
+    private double tienPhat;    
     private String ghiChu;
     
-    // Biến phụ hỗ trợ hiển thị (không có trong bảng)
+    // [MỚI] Biến phụ hỗ trợ hiển thị
     private int soLuongSach; 
+    private String tenSach; // Thêm biến này để hiện tên sách trong lịch sử
 
     public DTO_PhieuMuon() {}
 
@@ -30,7 +31,7 @@ public class DTO_PhieuMuon {
         this.ghiChu = ghiChu;
     }
 
-    // Getters & Setters
+    // Getters & Setters cũ
     public String getMaPhieuMuon() { return maPhieuMuon; }
     public void setMaPhieuMuon(String maPhieuMuon) { this.maPhieuMuon = maPhieuMuon; }
 
@@ -60,4 +61,8 @@ public class DTO_PhieuMuon {
 
     public int getSoLuongSach() { return soLuongSach; }
     public void setSoLuongSach(int soLuongSach) { this.soLuongSach = soLuongSach; }
+
+    // [MỚI] Getter/Setter cho TenSach
+    public String getTenSach() { return tenSach; }
+    public void setTenSach(String tenSach) { this.tenSach = tenSach; }
 }
