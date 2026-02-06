@@ -7,11 +7,9 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -35,6 +33,9 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
+// Import module Cài đặt & Sao lưu
+import CAIDAT.GUI_CauHinh;
+import CAIDAT.GUI_SaoLuuPhucHoi;
 import CHUNG.DBConnect;
 import DOCGIA.GUI_QuanLyDocGia;
 import MUONTRA.GUI_LichSuMuon;
@@ -44,6 +45,8 @@ import SACH.GUI_QuanLyTheLoai;
 import SACH.GUI_TraCuuSach;
 import THONGKE.GUI_ThongKe;
 import THUTHU.GUI_QuanLyThuThu;
+// Import module Nhập Hàng
+import NHAPHANG.GUI_QuanLyNhapHang;
 
 public class GUI_Main extends JFrame {
 
@@ -74,6 +77,7 @@ public class GUI_Main extends JFrame {
         else if (dTO_TaiKhoan.getPhanQuyen() == 2) roleTitle = "THỦ THƯ";
 
         setTitle("HỆ THỐNG QUẢN LÝ THƯ VIỆN - " + roleTitle);
+        
         setSize(1200, 750); 
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -92,7 +96,7 @@ public class GUI_Main extends JFrame {
         JPanel panelUser = new JPanel();
         panelUser.setLayout(new BoxLayout(panelUser, BoxLayout.Y_AXIS));
         panelUser.setBackground(mainColor);
-        panelUser.setBorder(new EmptyBorder(30, 0, 20, 0));
+        panelUser.setBorder(new EmptyBorder(15, 0, 10, 0));
 
         // Logic Avatar
         String avatarName = "reader.png"; 
@@ -113,7 +117,8 @@ public class GUI_Main extends JFrame {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                int size = 100; 
+                
+                int size = 80; 
                 int x = (getWidth() - size) / 2;
                 int y = 0;
                 try {
@@ -131,7 +136,7 @@ public class GUI_Main extends JFrame {
                 } catch (Exception e) { e.printStackTrace(); }
             }
         };
-        pnlAvatar.setPreferredSize(new Dimension(280, 110));
+        pnlAvatar.setPreferredSize(new Dimension(280, 90));
         pnlAvatar.setBackground(mainColor);
         panelUser.add(pnlAvatar);
 
@@ -163,17 +168,23 @@ public class GUI_Main extends JFrame {
             panelList.add(createMenuButton("Thông Tin Cá Nhân"));
         } else { // --- ADMIN (1) & THỦ THƯ (2) ---
             panelList.add(createMenuButton("Quản Lý Sách"));
+            panelList.add(createMenuButton("Quản Lý Nhập Hàng")); 
+            
             panelList.add(createMenuButton("Quản Lý Thể Loại")); 
             panelList.add(createMenuButton("Quản Lý Độc Giả"));
             panelList.add(createMenuButton("Quản Lý Mượn Trả"));
             
-            // Chỉ ADMIN mới thấy Quản Lý Nhân Viên -> Sửa thành Quản Lý Thủ Thư
             if (dTO_TaiKhoan.getPhanQuyen() == 1) {
                 panelList.add(createMenuButton("Quản Lý Thủ Thư")); 
             }
 
-            // Cả Admin và Thủ thư đều thấy Thống Kê
             panelList.add(createMenuButton("Thống Kê"));
+            
+            // Module Cài đặt & Sao lưu
+            if (dTO_TaiKhoan.getPhanQuyen() == 1) {
+                panelList.add(createMenuButton("Cài Đặt Hệ Thống"));
+                panelList.add(createMenuButton("Sao Lưu Dữ Liệu"));
+            }
         }
 
         JScrollPane scrollPane = new JScrollPane(panelList);
@@ -231,7 +242,9 @@ public class GUI_Main extends JFrame {
         // Body
         panelContent = new JPanel(new BorderLayout());
         panelContent.setBackground(bgColor);
-        panelContent.add(createHomePanel()); 
+        
+        // [CẬP NHẬT] Mặc định load GUI_TrangChu khi mở app
+        panelContent.add(new GUI_TrangChu()); 
 
         pnlRight.add(panelContent, BorderLayout.CENTER);
         add(pnlRight, BorderLayout.CENTER);
@@ -239,43 +252,7 @@ public class GUI_Main extends JFrame {
 
     // --- LOGIC HỖ TRỢ ---
 
-    private JPanel createHomePanel() {
-        JPanel p = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                try {
-                    URL imgUrl = getClass().getResource("/com/qlthuvien/images/dashboard_bg.jpg"); 
-                    if(imgUrl == null) imgUrl = getClass().getResource("/com/qlthuvien/images/home_bg.jpg");
-
-                    if (imgUrl != null) {
-                        ImageIcon icon = new ImageIcon(imgUrl);
-                        Image img = icon.getImage();
-                        int panelW = getWidth();
-                        int panelH = getHeight();
-                        int imgW = img.getWidth(null);
-                        int imgH = img.getHeight(null);
-                        double scale = Math.max((double)panelW/imgW, (double)panelH/imgH);
-                        int newW = (int)(imgW * scale);
-                        int newH = (int)(imgH * scale);
-                        int x = (panelW - newW) / 2;
-                        int y = (panelH - newH) / 2;
-                        
-                        Graphics2D g2d = (Graphics2D) g;
-                        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                        g2d.drawImage(img, x, y, newW, newH, null);
-                    } else {
-                        Graphics2D g2d = (Graphics2D) g;
-                        GradientPaint gp = new GradientPaint(0, 0, Color.WHITE, getWidth(), getHeight(), new Color(220, 235, 255));
-                        g2d.setPaint(gp);
-                        g2d.fillRect(0, 0, getWidth(), getHeight());
-                    }
-                } catch (Exception e) { e.printStackTrace(); }
-            }
-        };
-        p.setLayout(new BorderLayout());
-        return p;
-    }
+    // [ĐÃ XÓA] Hàm createHomePanel() vì không còn dùng nữa
 
     private void startClock() {
         Timer timer = new Timer(1000, e -> {
@@ -302,9 +279,9 @@ public class GUI_Main extends JFrame {
 
     private JButton createMenuButton(String text) {
         JButton btn = new JButton(text);
-        btn.setMaximumSize(new Dimension(280, 50)); 
-        btn.setPreferredSize(new Dimension(250, 50));
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btn.setMaximumSize(new Dimension(280, 40)); 
+        btn.setPreferredSize(new Dimension(250, 40));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setForeground(normalText);
         btn.setBackground(mainColor); 
         btn.setBorder(new EmptyBorder(0, 30, 0, 0)); 
@@ -345,21 +322,27 @@ public class GUI_Main extends JFrame {
 
     // --- HÀM CHUYỂN ĐỔI GIAO DIỆN CHÍNH ---
     private void changeContent(String menuName) {
+        // Với các chức năng thường thì xóa content cũ để load cái mới
         panelContent.removeAll();
-        // panelContent.setLayout(new BorderLayout()); // Đã set ở constructor rồi, ko cần set lại
 
         switch (menuName) {
             case "Trang Chủ":
-                panelContent.add(createHomePanel());
+                // [CẬP NHẬT] Load giao diện trang chủ mới
+                panelContent.add(new GUI_TrangChu());
                 break;
             case "Quản Lý Sách":
                 panelContent.add(new GUI_QuanLySach());                
+                break;
+            case "Quản Lý Nhập Hàng":
+                String maNV = dTO_TaiKhoan.getMaThuThu();
+                if (maNV == null) maNV = dTO_TaiKhoan.getUserName(); 
+                panelContent.add(new GUI_QuanLyNhapHang(maNV, dTO_TaiKhoan.getUserName()));
                 break;
             case "Quản Lý Thể Loại":
                 panelContent.add(new GUI_QuanLyTheLoai());                
                 break;
             case "Quản Lý Độc Giả":
-                panelContent.add(new GUI_QuanLyDocGia());                     
+                panelContent.add(new GUI_QuanLyDocGia());                   
                 break;
             case "Quản Lý Mượn Trả":
                 panelContent.add(new GUI_QuanLyMuonTra());
@@ -369,6 +352,12 @@ public class GUI_Main extends JFrame {
                 break;
             case "Thống Kê": 
                 panelContent.add(new GUI_ThongKe());
+                break;
+            case "Cài Đặt Hệ Thống":
+                panelContent.add(new GUI_CauHinh());
+                break;
+            case "Sao Lưu Dữ Liệu":
+                panelContent.add(new GUI_SaoLuuPhucHoi());
                 break;
             case "Tra Cứu Sách":
                 panelContent.add(new GUI_TraCuuSach());
@@ -399,7 +388,6 @@ public class GUI_Main extends JFrame {
         return p;
     }
 
-    // [MỚI] Hàm này để các form con lấy thông tin người đang đăng nhập
     public DTO_TaiKhoan getTaiKhoan() {
         return this.dTO_TaiKhoan;
     }
