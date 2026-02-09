@@ -1,196 +1,239 @@
-package HETHONG;
+package THONGKE;
 
-import THONGKE.DAL_ThongKe;
+import MUONTRA.DTO_PhieuMuon;
+import CHUNG.DBConnect;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 
-public class GUI_TrangChu extends JPanel {
+public class DAL_ThongKe {
 
-    private DTO_TaiKhoan tk; 
-    private DAL_ThongKe dal = new DAL_ThongKe(); // Gọi DAL xử lý dữ liệu
+    // ==========================================================================
+    // PHẦN 1: CÁC HÀM CHO DASHBOARD (GUI_TrangChu & GUI_ThongKe)
+    // ==========================================================================
 
-    // Class lưu trữ dữ liệu cột
-    private class DataColumn {
-        String title;
-        int value;
-        Color color1, color2, shadowColor;
-
-        public DataColumn(String title, int value, Color c1, Color c2) {
-            this.title = title;
-            this.value = value;
-            this.color1 = c1;
-            this.color2 = c2;
-            this.shadowColor = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), 80);
-        }
+    // 1. Tổng số đầu sách (Số lượng tựa sách)
+    public int getTongDauSach() {
+        return getCount("SELECT COUNT(*) FROM SACH");
     }
 
-    private ArrayList<DataColumn> listData = new ArrayList<>();
-    private int maxValue = 0; 
+    // 2. Tổng số độc giả
+    public int getTongDocGia() {
+        return getCount("SELECT COUNT(*) FROM DOC_GIA");
+    }
 
-    public GUI_TrangChu(DTO_TaiKhoan tk) {
-        this.tk = tk;
-        setLayout(new BorderLayout());
-        setBorder(new EmptyBorder(30, 30, 30, 30));
+    // 3. Tổng số lượt mượn (Tổng số phiếu)
+    public int getTongPhieuMuon() {
+        return getCount("SELECT COUNT(*) FROM PHIEU_MUON");
+    }
 
-        // 1. Load dữ liệu (Gọi qua DAL)
-        loadData();
+    // 4. Tổng số vi phạm (Quá hạn hoặc có tiền phạt)
+    public int getTongViPham() {
+        return getCount("SELECT COUNT(*) FROM PHIEU_MUON WHERE TinhTrang LIKE N'%Quá hạn%' OR TienPhat > 0");
+    }
 
-        // 2. Panel Biểu đồ
-        JPanel pnlChart = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                // Vẽ biểu đồ đè lên nền trong suốt
-                drawChart((Graphics2D) g, getWidth(), getHeight());
+    // 5. [MỚI] Lấy dữ liệu cho biểu đồ tròn (Số lượng sách theo thể loại)
+    public HashMap<String, Integer> getSachTheoTheLoai() {
+        HashMap<String, Integer> map = new HashMap<>();
+        try (Connection conn = new DBConnect().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT TheLoai, COUNT(*) FROM SACH GROUP BY TheLoai")) {
+            while (rs.next()) {
+                map.put(rs.getString(1), rs.getInt(2));
             }
-        };
-        pnlChart.setOpaque(false); 
-        add(pnlChart, BorderLayout.CENTER);
-
-        // 3. Footer
-        JLabel lblFooter = new JLabel("HỆ THỐNG QUẢN LÝ THƯ VIỆN - PHIÊN BẢN 2026", SwingConstants.CENTER);
-        lblFooter.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblFooter.setForeground(new Color(120, 130, 150));
-        lblFooter.setBorder(new EmptyBorder(20, 0, 0, 0));
-        add(lblFooter, BorderLayout.SOUTH);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
     }
 
-    // Vẽ nền Gradient sang trọng
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        int w = getWidth();
-        int h = getHeight();
-        Color color1 = new Color(255, 255, 255); 
-        Color color2 = new Color(225, 240, 255); // Xanh rất nhạt
-        GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
-        g2d.setPaint(gp);
-        g2d.fillRect(0, 0, w, h);
-    }
-
-    private void loadData() {
-        listData.clear();
-        
-        // --- LOGIC PHÂN QUYỀN ---
-        // Giả sử quy ước: 1=Admin, 2=Thủ thư, 3=Độc giả
-        if (tk.getPhanQuyen() == 3) { 
-            // === VIEW CHO ĐỘC GIẢ ===
-            String maDG = tk.getMaDocGia();
-            
-            // Gọi hàm từ DAL_ThongKe (đã thêm ở Bước 1)
-            int tongLuot = dal.getCountAllPersonal(maDG);
-            int dangMuon = dal.getCountPersonal(maDG, "Đang mượn");
-            int daTra = dal.getCountPersonal(maDG, "Đã trả");
-            int quaHan = dal.getCountPersonal(maDG, "Quá hạn");
-
-            // Cột 1: Tổng lượt (Tím)
-            listData.add(new DataColumn("TỔNG LỊCH SỬ", tongLuot, new Color(160, 100, 255), new Color(110, 50, 230)));
-            // Cột 2: Đang mượn (Cam)
-            listData.add(new DataColumn("ĐANG MƯỢN", dangMuon, new Color(255, 180, 60), new Color(255, 140, 0)));
-            // Cột 3: Đã trả (Xanh lá)
-            listData.add(new DataColumn("ĐÃ TRẢ", daTra, new Color(100, 220, 120), new Color(46, 180, 80)));
-            // Cột 4: Quá hạn (Đỏ)
-            listData.add(new DataColumn("QUÁ HẠN / PHẠT", quaHan, new Color(255, 94, 98), new Color(220, 40, 50)));
-
-        } else {
-            // === VIEW CHO ADMIN / THỦ THƯ ===
-            // Gọi hàm sẵn có từ DAL_ThongKe
-            int sach = dal.getTongDauSach();
-            int docgia = dal.getTongDocGia();
-            int dangmuon = dal.getTongPhieuMuon(); // Thực tế là tổng lượt mượn toàn hệ thống
-            int vipham = dal.getTongViPham();
-            
-            listData.add(new DataColumn("KHO SÁCH", sach, new Color(41, 182, 246), new Color(2, 119, 189)));
-            listData.add(new DataColumn("ĐỘC GIẢ", docgia, new Color(102, 187, 106), new Color(46, 125, 50)));
-            listData.add(new DataColumn("HOẠT ĐỘNG", dangmuon, new Color(255, 167, 38), new Color(239, 108, 0)));
-            listData.add(new DataColumn("CẢNH BÁO", vipham, new Color(239, 83, 80), new Color(198, 40, 40)));
-        }
-
-        // Tính Max Value để vẽ tỷ lệ cột
-        maxValue = 0;
-        for (DataColumn d : listData) {
-            if (d.value > maxValue) maxValue = d.value;
-        }
-        if (maxValue == 0) maxValue = 1; 
-    }
-
-    private void drawChart(Graphics2D g2, int w, int h) {
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-        // --- TIÊU ĐỀ THAY ĐỔI THEO VAI TRÒ ---
-        String title = (tk.getPhanQuyen() == 3) ? "HỒ SƠ MƯỢN SÁCH CÁ NHÂN" : "TỔNG QUAN HỆ THỐNG THƯ VIỆN";
-        
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        g2.setColor(new Color(60, 70, 90)); 
-        FontMetrics fm = g2.getFontMetrics();
-        g2.drawString(title, (w - fm.stringWidth(title)) / 2, 50);
-
-        if (tk.getPhanQuyen() == 3) {
-            g2.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-            g2.setColor(new Color(100, 100, 100));
-            String sub = "Xin chào " + tk.getUserName() + ", dưới đây là thống kê hoạt động của bạn.";
-            g2.drawString(sub, (w - g2.getFontMetrics().stringWidth(sub)) / 2, 80);
-        }
-
-        // --- VẼ BIỂU ĐỒ CỘT ---
-        int numCols = listData.size();
-        int gap = 80; // Khoảng cách giữa các cột
-        int maxBarHeight = h - 220; 
-        int barWidth = 160; 
-        
-        int totalChartWidth = (numCols * barWidth) + ((numCols - 1) * gap);
-        int startX = (w - totalChartWidth) / 2;
-        int bottomY = h - 80; 
-
-        for (int i = 0; i < numCols; i++) {
-            DataColumn item = listData.get(i);
-            
-            double ratio = (double) item.value / maxValue;
-            if (item.value > 0 && ratio < 0.05) ratio = 0.05; // Cột thấp nhất vẫn hiện 1 chút
-            
-            int barHeight = (int) (ratio * maxBarHeight);
-            if (item.value == 0) barHeight = 4; // Nếu = 0 thì vẽ 1 vạch mỏng
-            
-            int x = startX + i * (barWidth + gap);
-            int y = bottomY - barHeight;
-
-            // 1. Vẽ bóng đổ (Shadow)
-            g2.setColor(item.shadowColor);
-            g2.fillRoundRect(x + 10, y + 10, barWidth - 10, barHeight - 5, 25, 25);
-
-            // 2. Vẽ Cột (Gradient)
-            GradientPaint gp = new GradientPaint(x, y, item.color1, x + barWidth, y + barHeight, item.color2);
-            g2.setPaint(gp);
-            g2.fillRoundRect(x, y, barWidth, barHeight, 20, 20);
-
-            // 3. Vẽ Số liệu
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 42));
-            String valStr = String.valueOf(item.value);
-            fm = g2.getFontMetrics();
-            
-            // Logic: Nếu cột cao > 60px thì số nằm trong, thấp thì số nằm trên đầu
-            int textY = y + 55;
-            boolean isInside = true;
-            if (barHeight < 60) { textY = y - 10; isInside = false; }
-
-            if (isInside) {
-                // Vẽ bóng chữ nhẹ nếu nằm trong cột
-                g2.setColor(new Color(0,0,0,40));
-                g2.drawString(valStr, x + (barWidth - fm.stringWidth(valStr)) / 2 + 2, textY + 2);
+    // 6. [MỚI] Lấy danh sách 10 hoạt động gần đây nhất
+    public ArrayList<String[]> getHoatDongGanDay() {
+        ArrayList<String[]> list = new ArrayList<>();
+        String sql = "SELECT PM.MaPhieuMuon, DG.TenDocGia, PM.NgayMuon, PM.TinhTrang " +
+                     "FROM PHIEU_MUON PM " +
+                     "JOIN DOC_GIA DG ON PM.MaDocGia = DG.MaDocGia " +
+                     "ORDER BY PM.NgayMuon DESC LIMIT 10";
+        try (Connection conn = new DBConnect().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String mota = rs.getString("TenDocGia") + " mượn phiếu " + rs.getString("MaPhieuMuon");
+                String thoigian = rs.getString("NgayMuon");
+                String trangthai = rs.getString("TinhTrang");
+                list.add(new String[]{mota, thoigian, trangthai});
             }
-            g2.setColor(isInside ? Color.WHITE : item.color2);
-            g2.drawString(valStr, x + (barWidth - fm.stringWidth(valStr)) / 2, textY);
-
-            // 4. Vẽ Tên Cột
-            g2.setColor(new Color(80, 90, 100));
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            fm = g2.getFontMetrics();
-            g2.drawString(item.title, x + (barWidth - fm.stringWidth(item.title)) / 2, bottomY + 30);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return list;
+    }
+
+    // ==========================================================================
+    // PHẦN 2: CÁC HÀM CHO BÁO CÁO CHI TIẾT
+    // ==========================================================================
+
+    // 7. Lấy danh sách sách đang được mượn (Chưa trả)
+    public ArrayList<DTO_ThongKeSach> getListSachDangMuon() {
+        ArrayList<DTO_ThongKeSach> list = new ArrayList<>();
+        String sql = "SELECT s.MaCuonSach, s.TenSach, pm.MaDocGia, pm.MaPhieuMuon " +
+                     "FROM CHI_TIET_PHIEU_MUON ct " +
+                     "JOIN PHIEU_MUON pm ON ct.MaPhieuMuon = pm.MaPhieuMuon " +
+                     "JOIN SACH s ON ct.MaCuonSach = s.MaCuonSach " +
+                     "WHERE pm.NgayTra IS NULL";
+        try (Connection conn = new DBConnect().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String tinhTrang = "Mượn bởi " + rs.getString("MaDocGia") + " (PM: " + rs.getString("MaPhieuMuon") + ")";
+                list.add(new DTO_ThongKeSach(rs.getString("MaCuonSach"), rs.getString("TenSach"), tinhTrang));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // 8. Lấy danh sách sách còn trong kho
+    public ArrayList<DTO_ThongKeSach> getListSachTrongKho() {
+        ArrayList<DTO_ThongKeSach> list = new ArrayList<>();
+        String sql = "SELECT MaCuonSach, TenSach, SoLuong FROM SACH WHERE SoLuong > 0";
+        try (Connection conn = new DBConnect().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new DTO_ThongKeSach(rs.getString("MaCuonSach"), rs.getString("TenSach"), "Tồn kho: " + rs.getInt("SoLuong")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // 9. Tính tổng toàn bộ tài sản sách (Sách trong kho + Sách đang mượn)
+    public int getTongTaiSanSach() {
+        int tong = 0;
+        try (Connection conn = new DBConnect().getConnection()) {
+            // Tổng số lượng tồn
+            PreparedStatement ps1 = conn.prepareStatement("SELECT SUM(SoLuong) FROM SACH");
+            ResultSet rs1 = ps1.executeQuery();
+            if (rs1.next()) tong += rs1.getInt(1);
+
+            // Tổng số lượng đang mượn
+            PreparedStatement ps2 = conn.prepareStatement("SELECT COUNT(*) FROM CHI_TIET_PHIEU_MUON ct JOIN PHIEU_MUON pm ON ct.MaPhieuMuon = pm.MaPhieuMuon WHERE pm.NgayTra IS NULL");
+            ResultSet rs2 = ps2.executeQuery();
+            if (rs2.next()) tong += rs2.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return tong;
+    }
+
+    // 10. Lấy danh sách mượn trả theo thời gian (Ngày, Tuần, Tháng)
+    public ArrayList<DTO_PhieuMuon> getListMuonTra(String option) {
+        ArrayList<DTO_PhieuMuon> list = new ArrayList<>();
+        String sql = "SELECT * FROM PHIEU_MUON";
+
+        // Filter theo thời gian
+        switch (option) {
+            case "DAY":
+                sql += " WHERE DATE(NgayMuon) = CURDATE()";
+                break;
+            case "WEEK":
+                sql += " WHERE YEARWEEK(NgayMuon, 1) = YEARWEEK(CURDATE(), 1)";
+                break;
+            case "MONTH":
+                sql += " WHERE MONTH(NgayMuon) = MONTH(CURDATE()) AND YEAR(NgayMuon) = YEAR(CURDATE())";
+                break;
+            case "CURRENT":
+                sql += " WHERE NgayTra IS NULL";
+                break;
+        }
+
+        try (Connection conn = new DBConnect().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                DTO_PhieuMuon pm = new DTO_PhieuMuon();
+                pm.setMaPhieuMuon(rs.getString("MaPhieuMuon"));
+                pm.setNgayMuon(rs.getDate("NgayMuon"));
+                pm.setNgayTra(rs.getDate("NgayTra"));
+                pm.setMaDocGia(rs.getString("MaDocGia"));
+                pm.setTinhTrang(rs.getString("TinhTrang"));
+                pm.setTienPhat(rs.getDouble("TienPhat"));
+                list.add(pm);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // 11. Lấy danh sách vi phạm
+    public ArrayList<DTO_PhieuMuon> getListViPham() {
+        ArrayList<DTO_PhieuMuon> list = new ArrayList<>();
+        String sql = "SELECT * FROM PHIEU_MUON WHERE TinhTrang LIKE N'%Quá hạn%' OR TienPhat > 0";
+        try (Connection conn = new DBConnect().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                DTO_PhieuMuon pm = new DTO_PhieuMuon();
+                pm.setMaPhieuMuon(rs.getString("MaPhieuMuon"));
+                pm.setNgayMuon(rs.getDate("NgayMuon"));
+                pm.setNgayHenTra(rs.getDate("NgayHenTra"));
+                pm.setNgayTra(rs.getDate("NgayTra"));
+                pm.setMaDocGia(rs.getString("MaDocGia"));
+                pm.setTinhTrang(rs.getString("TinhTrang")); // Lỗi vi phạm
+                pm.setTienPhat(rs.getDouble("TienPhat"));
+                list.add(pm);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // 12. [MỚI] Đếm số lượng phiếu theo trạng thái của riêng 1 độc giả
+    public int getCountPersonal(String maDocGia, String trangThaiKeyword) {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM PHIEU_MUON WHERE MaDocGia = ? AND TinhTrang LIKE ?";
+        try (Connection conn = new DBConnect().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maDocGia);
+            ps.setString(2, "%" + trangThaiKeyword + "%");
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) count = rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return count;
+    }
+
+    // 13. [MỚI] Đếm tổng số lượt mượn (Lịch sử) của riêng 1 độc giả
+    public int getCountAllPersonal(String maDocGia) {
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM PHIEU_MUON WHERE MaDocGia = ?";
+        try (Connection conn = new DBConnect().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maDocGia);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) count = rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return count;
+    }
+
+    // --- Helper: Hàm đếm chung ---
+    private int getCount(String sql) {
+        int count = 0;
+        try (Connection conn = new DBConnect().getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) count = rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 }
