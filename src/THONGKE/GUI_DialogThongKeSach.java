@@ -5,13 +5,31 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+
+//import com.itextpdf.text.BaseColor;
+//import com.itextpdf.text.Document;
+//import com.itextpdf.text.Element;
+//import com.itextpdf.text.PageSize;
+//import com.itextpdf.text.Paragraph;
+//import com.itextpdf.text.Phrase;
+//import com.itextpdf.text.pdf.BaseFont;
+//import com.itextpdf.text.pdf.PdfPCell;
+//import com.itextpdf.text.pdf.PdfPTable;
+//import com.itextpdf.text.pdf.PdfWriter;
+
+
 import java.awt.*;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import java.io.OutputStreamWriter;
+import java.io.BufferedWriter;
+import java.io.IOException;
 
 public class GUI_DialogThongKeSach extends JDialog {
 
@@ -153,44 +171,92 @@ public class GUI_DialogThongKeSach extends JDialog {
             SwingUtilities.invokeLater(() -> lblTongSoLuong.setText(tong + " cuốn"));
         }).start();
     }
-
-    // --- CẬP NHẬT: LƯU FILE RA DESKTOP ---
+   
+//     --- CẬP NHẬT: LƯU FILE RA DESKTOP ---
+    
     private void xuLyGhiLog() {
-        try {
-            // 1. Tạo tên file theo thời gian
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            
-            // 2. Lấy đường dẫn Desktop của người dùng
-            String userHome = System.getProperty("user.home");
-            String desktopPath = userHome + File.separator + "Desktop" + File.separator;
-            
-            // 3. Đường dẫn file hoàn chỉnh
-            String fileName = desktopPath + "Log_ThongKe_" + timeStamp + ".txt";
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn nơi lưu file Log");
+        
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        fileChooser.setSelectedFile(new File("Log_ThongKe_" + timeStamp + ".txt"));
 
-            PrintWriter pw = new PrintWriter(new FileWriter(fileName));
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
             
-            pw.println("BÁO CÁO THỐNG KÊ TÀI LIỆU THƯ VIỆN");
-            pw.println("Thời gian xuất: " + new Date());
-            pw.println("Tổng số sách: " + lblTongSoLuong.getText());
-            pw.println("--------------------------------------------------");
-            pw.println("Loại danh sách: " + (rdoDangMuon.isSelected() ? "Sách Đang Cho Mượn" : "Sách Còn Trong Kho"));
-            pw.println("Số lượng bản ghi: " + model.getRowCount());
-            pw.println("--------------------------------------------------");
-            pw.printf("%-15s %-40s %-30s\n", "MÃ SÁCH", "TÊN SÁCH", "TÌNH TRẠNG");
-            pw.println("--------------------------------------------------");
-            
-            for(int i=0; i<model.getRowCount(); i++) {
-                String ma = model.getValueAt(i, 0).toString();
-                String ten = model.getValueAt(i, 1).toString();
-                String tt = model.getValueAt(i, 2).toString();
-                pw.printf("%-15s %-40s %-30s\n", ma, ten, tt);
+            // SỬA LỖI TẠI ĐÂY: Dùng OutputStreamWriter để tương thích Java cũ
+            try (PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter( new FileOutputStream(fileToSave), "UTF-8")), true)) {
+                
+                pw.println("BÁO CÁO THỐNG KÊ TÀI LIỆU THƯ VIỆN");
+                pw.println("Thời gian xuất: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
+                pw.println("Tổng số sách trong hệ thống: " + lblTongSoLuong.getText());
+                pw.println("--------------------------------------------------");
+                pw.println("Loại danh sách xuất: " + (rdoDangMuon.isSelected() ? "Sách Đang Cho Mượn" : "Sách Còn Trong Kho"));
+                pw.println("Số lượng hiển thị: " + model.getRowCount());
+                pw.println("--------------------------------------------------");
+                
+                pw.printf("| %-15s | %-40s | %-25s |\n", "MÃ SÁCH", "TÊN SÁCH", "TÌNH TRẠNG");
+                pw.println("---------------------------------------------------------------------------------------");
+                
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    String ma = model.getValueAt(i, 0).toString();
+                    String ten = model.getValueAt(i, 1).toString();
+                    String tt = model.getValueAt(i, 2).toString();
+                    pw.printf("| %-15s | %-40s | %-25s |\n", ma, ten, tt);
+                }
+                
+                pw.println("---------------------------------------------------------------------------------------");
+                pw.println("--- HẾT BÁO CÁO ---");
+                
+                JOptionPane.showMessageDialog(this, "Đã ghi log thành công vào:\n" + fileToSave.getAbsolutePath());
+                
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(fileToSave);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi khi ghi file: " + e.getMessage());
             }
-            pw.close();
-            
-            JOptionPane.showMessageDialog(this, "Đã ghi log thành công!" + fileName);
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi ghi file!");
         }
     }
+    
+//    private void xuLyGhiLog() {
+//        try {
+//            // 1. Tạo tên file theo thời gian
+//            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+//            
+//            // 2. Lấy đường dẫn Desktop của người dùng
+//            String userHome = System.getProperty("user.home");
+//            String desktopPath = userHome + File.separator + "Desktop" + File.separator;
+//            
+//            // 3. Đường dẫn file hoàn chỉnh
+//            String fileName = desktopPath + "Log_ThongKe_" + timeStamp + ".txt";
+//
+//            PrintWriter pw = new PrintWriter(new FileWriter(fileName));
+//            
+//            pw.println("BÁO CÁO THỐNG KÊ TÀI LIỆU THƯ VIỆN");
+//            pw.println("Thời gian xuất: " + new Date());
+//            pw.println("Tổng số sách: " + lblTongSoLuong.getText());
+//            pw.println("--------------------------------------------------");
+//            pw.println("Loại danh sách: " + (rdoDangMuon.isSelected() ? "Sách Đang Cho Mượn" : "Sách Còn Trong Kho"));
+//            pw.println("Số lượng bản ghi: " + model.getRowCount());
+//            pw.println("--------------------------------------------------");
+//            pw.printf("%-15s %-40s %-30s\n", "MÃ SÁCH", "TÊN SÁCH", "TÌNH TRẠNG");
+//            pw.println("--------------------------------------------------");
+//            
+//            for(int i=0; i<model.getRowCount(); i++) {
+//                String ma = model.getValueAt(i, 0).toString();
+//                String ten = model.getValueAt(i, 1).toString();
+//                String tt = model.getValueAt(i, 2).toString();
+//                pw.printf("%-15s %-40s %-30s\n", ma, ten, tt);
+//            }
+//            pw.close();
+//            
+//            JOptionPane.showMessageDialog(this, "Đã ghi log thành công!" + fileName);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            JOptionPane.showMessageDialog(this, "Lỗi khi ghi file!");
+//        }
+//    }
 }

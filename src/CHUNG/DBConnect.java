@@ -10,7 +10,7 @@ public class DBConnect {
     
     // 1. Cấu hình thông tin kết nối
     // Lưu ý: Bạn đang dùng Port 3307 (thường là XAMPP đổi port), nếu lỗi hãy thử về 3306
-    private final String URL = "jdbc:mysql://localhost:3307/QuanLyThuVien?useUnicode=true&characterEncoding=UTF-8";
+    private final String URL = "jdbc:mysql://localhost:3306/quanlythuvien?useUnicode=true&characterEncoding=UTF-8";
     private final String USER = "root"; 
     private final String PASS = ""; // Điền mật khẩu MySQL nếu có
 
