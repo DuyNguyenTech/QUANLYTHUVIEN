@@ -7,9 +7,11 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -243,16 +245,14 @@ public class GUI_Main extends JFrame {
         panelContent = new JPanel(new BorderLayout());
         panelContent.setBackground(bgColor);
         
-        // [CẬP NHẬT] Mặc định load GUI_TrangChu khi mở app
-        panelContent.add(new GUI_TrangChu()); 
+        // [CẬP NHẬT] Truyền thông tin tài khoản vào để phân quyền hiển thị Dashboard
+        panelContent.add(new GUI_TrangChu(dTO_TaiKhoan)); 
 
         pnlRight.add(panelContent, BorderLayout.CENTER);
         add(pnlRight, BorderLayout.CENTER);
     }
 
     // --- LOGIC HỖ TRỢ ---
-
-    // [ĐÃ XÓA] Hàm createHomePanel() vì không còn dùng nữa
 
     private void startClock() {
         Timer timer = new Timer(1000, e -> {
@@ -327,8 +327,8 @@ public class GUI_Main extends JFrame {
 
         switch (menuName) {
             case "Trang Chủ":
-                // [CẬP NHẬT] Load giao diện trang chủ mới
-                panelContent.add(new GUI_TrangChu());
+                // [CẬP NHẬT] Truyền thông tin tài khoản vào để phân quyền hiển thị Dashboard
+                panelContent.add(new GUI_TrangChu(dTO_TaiKhoan));
                 break;
             case "Quản Lý Sách":
                 panelContent.add(new GUI_QuanLySach());                

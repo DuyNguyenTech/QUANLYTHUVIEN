@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class GUI_QuanLyTheLoai extends JPanel {
 
-    // Màu sắc chủ đạo (đồng bộ với module Sách)
+    // Màu sắc chủ đạo (Đồng bộ với GUI_QuanLySach)
     private Color mainColor = new Color(50, 115, 220);
     private Color bgColor = new Color(245, 248, 253);
 
@@ -33,47 +33,69 @@ public class GUI_QuanLyTheLoai extends JPanel {
         setLayout(new BorderLayout());
         setBackground(bgColor);
 
-        // --- 1. HEADER (Tiêu đề) ---
-        JPanel pnlTop = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlTop.setBackground(Color.WHITE);
-        pnlTop.setBorder(new EmptyBorder(10, 20, 10, 20));
+        // --- 1. HEADER ---
+        JPanel pnlHeader = new JPanel(new BorderLayout());
+        pnlHeader.setBackground(Color.WHITE);
+        pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
+        // Kẻ đường line dưới header
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+            new EmptyBorder(15, 20, 15, 20)
+        ));
+
         JLabel lblTitle = new JLabel("QUẢN LÝ THỂ LOẠI SÁCH");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitle.setForeground(mainColor);
-        pnlTop.add(lblTitle);
-        add(pnlTop, BorderLayout.NORTH);
+        pnlHeader.add(lblTitle, BorderLayout.WEST);
+        
+        add(pnlHeader, BorderLayout.NORTH);
 
-        // --- 2. CENTER (Bảng dữ liệu) ---
+        // --- 2. CENTER (BẢNG DỮ LIỆU) ---
         JPanel pnlCenter = new JPanel(new BorderLayout());
         pnlCenter.setBackground(bgColor);
-        pnlCenter.setBorder(new EmptyBorder(10, 20, 10, 20));
+        pnlCenter.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // Setup Bảng
         String[] cols = {"Mã Thể Loại", "Tên Thể Loại"};
         model = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
         table = new JTable(model);
-        table.setRowHeight(35);
+        
+        // [STYLE PREMIUM]
+        table.setRowHeight(40);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setSelectionBackground(new Color(232, 240, 254));
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(new Color(232, 242, 252));
         table.setSelectionForeground(Color.BLACK);
-        table.setGridColor(new Color(230, 230, 230));
 
         // Header Bảng
         JTableHeader header = table.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
         header.setBackground(Color.WHITE);
         header.setForeground(mainColor);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor));
         header.setPreferredSize(new Dimension(0, 40));
 
-        // Căn giữa cột Mã
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        // Renderer chung (Căn giữa & Striped Rows)
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                }
+                setBorder(new EmptyBorder(0, 10, 0, 10));
+                return c;
+            }
+        };
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        
+        // Áp dụng renderer
         table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
@@ -82,56 +104,40 @@ public class GUI_QuanLyTheLoai extends JPanel {
         pnlCenter.add(scrollPane, BorderLayout.CENTER);
         add(pnlCenter, BorderLayout.CENTER);
 
-        // --- 3. BOTTOM (Form nhập liệu + Nút) ---
+        // --- 3. BOTTOM (INPUT + BUTTONS) ---
         JPanel pnlBottom = new JPanel(new BorderLayout());
-        pnlBottom.setBackground(Color.WHITE);
-        pnlBottom.setBorder(new EmptyBorder(20, 20, 20, 20));
-        pnlBottom.setPreferredSize(new Dimension(0, 180));
-
-        // 3a. Khu vực nhập liệu (TitledBorder đẹp)
-        JPanel pnlInput = new JPanel(new GridBagLayout());
+        pnlBottom.setBackground(bgColor);
+        pnlBottom.setBorder(new EmptyBorder(0, 20, 20, 20));
+        
+        // 3a. Panel Input (Nền trắng, bo góc)
+        JPanel pnlInput = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 15));
         pnlInput.setBackground(Color.WHITE);
-        pnlInput.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY), 
-                "Thông tin chi tiết", 
-                TitledBorder.DEFAULT_JUSTIFICATION, 
-                TitledBorder.DEFAULT_POSITION, 
-                new Font("Segoe UI", Font.BOLD, 14), 
-                mainColor
+        pnlInput.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220)),
+            new EmptyBorder(10, 10, 10, 10)
         ));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 20, 10, 20);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
         // Mã thể loại
-        gbc.gridx = 0; gbc.gridy = 0;
-        pnlInput.add(new JLabel("Mã thể loại:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 0.3;
-        txtMa = new JTextField();
-        txtMa.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtMa.setPreferredSize(new Dimension(200, 30));
-        pnlInput.add(txtMa, gbc);
+        pnlInput.add(createLabel("Mã thể loại:"));
+        txtMa = createTextField();
+        pnlInput.add(txtMa);
 
         // Tên thể loại
-        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0;
-        pnlInput.add(new JLabel("Tên thể loại:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 0.7;
-        txtTen = new JTextField();
-        txtTen.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtTen.setPreferredSize(new Dimension(200, 30));
-        pnlInput.add(txtTen, gbc);
+        pnlInput.add(createLabel("Tên thể loại:"));
+        txtTen = createTextField();
+        pnlInput.add(txtTen);
 
         pnlBottom.add(pnlInput, BorderLayout.CENTER);
 
-        // 3b. Khu vực nút bấm (Dưới cùng)
-        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        pnlButtons.setBackground(Color.WHITE);
+        // 3b. Panel Buttons (Dưới cùng)
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
+        pnlButtons.setBackground(bgColor);
 
-        btnThem = createButton("Thêm Mới", mainColor);
-        btnSua = createButton("Cập Nhật", new Color(255, 152, 0)); // Cam
-        btnXoa = createButton("Xóa Bỏ", new Color(220, 53, 69));   // Đỏ
-        btnLamMoi = createButton("Làm Mới", new Color(40, 167, 69)); // Xanh lá
+        // [MÀU SẮC ĐỒNG BỘ VỚI CÁC MODULE KHÁC]
+        btnThem = createButton("Thêm Thể Loại", new Color(40, 167, 69));   // Xanh lá
+        btnSua = createButton("Sửa Thể Loại", new Color(255, 193, 7));    // Vàng cam
+        btnXoa = createButton("Xóa Bỏ", new Color(220, 53, 69));      // Đỏ
+        btnLamMoi = createButton("Làm Mới", new Color(23, 162, 184)); // Xanh Cyan
 
         pnlButtons.add(btnThem);
         pnlButtons.add(btnSua);
@@ -159,11 +165,11 @@ public class GUI_QuanLyTheLoai extends JPanel {
         // Nút Thêm
         btnThem.addActionListener(e -> {
             if (validateInput()) {
-                if (dal.checkExist(txtMa.getText())) {
+                if (dal.checkExist(txtMa.getText().trim())) {
                     JOptionPane.showMessageDialog(this, "Mã thể loại đã tồn tại!");
                     return;
                 }
-                DTO_TheLoai tl = new DTO_TheLoai(txtMa.getText(), txtTen.getText());
+                DTO_TheLoai tl = new DTO_TheLoai(txtMa.getText().trim(), txtTen.getText().trim());
                 if (dal.add(tl)) {
                     JOptionPane.showMessageDialog(this, "Thêm thành công!");
                     loadData();
@@ -181,7 +187,7 @@ public class GUI_QuanLyTheLoai extends JPanel {
                 return;
             }
             if (validateInput()) {
-                DTO_TheLoai tl = new DTO_TheLoai(txtMa.getText(), txtTen.getText());
+                DTO_TheLoai tl = new DTO_TheLoai(txtMa.getText().trim(), txtTen.getText().trim());
                 if (dal.update(tl)) {
                     JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
                     loadData();
@@ -239,13 +245,33 @@ public class GUI_QuanLyTheLoai extends JPanel {
         return true;
     }
 
+    // --- HELPER UI ---
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lbl.setForeground(new Color(50, 50, 50));
+        return lbl;
+    }
+
+    private JTextField createTextField() {
+        JTextField txt = new JTextField();
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txt.setPreferredSize(new Dimension(200, 35));
+        // Bo viền và padding
+        txt.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            new EmptyBorder(5, 8, 5, 8)
+        ));
+        return txt;
+    }
+
     private JButton createButton(String text, Color bg) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(120, 35));
+        btn.setPreferredSize(new Dimension(150, 45)); // Kích thước cố định giống các module khác
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
     }

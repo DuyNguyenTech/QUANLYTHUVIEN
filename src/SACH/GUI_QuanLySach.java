@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 public class GUI_QuanLySach extends JPanel {
 
+    // Màu chủ đạo
     private Color mainColor = new Color(50, 115, 220); 
     private Color bgColor = new Color(245, 248, 253);
     
@@ -30,31 +31,40 @@ public class GUI_QuanLySach extends JPanel {
         setLayout(new BorderLayout());
         setBackground(bgColor);
 
-        // --- HEADER ---
+        // --- 1. HEADER (TIÊU ĐỀ & TÌM KIẾM) ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setBackground(Color.WHITE);
         pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
+        // Tạo đường kẻ dưới nhẹ cho header
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+            new EmptyBorder(15, 20, 15, 20)
+        ));
 
         JLabel lblTitle = new JLabel("QUẢN LÝ SÁCH", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(mainColor);
         
-        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         pnlSearch.setBackground(Color.WHITE);
         
         cboLoc = new JComboBox<>(new String[]{"Tất cả", "Mã sách", "Tên sách", "Tác giả"});
-        cboLoc.setPreferredSize(new Dimension(120, 35));
+        cboLoc.setPreferredSize(new Dimension(130, 40));
         cboLoc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboLoc.setBackground(Color.WHITE);
         
         txtTimKiem = new JTextField();
-        txtTimKiem.setPreferredSize(new Dimension(300, 35));
+        txtTimKiem.setPreferredSize(new Dimension(350, 40));
         txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtTimKiem.setToolTipText("Nhập từ khóa và nhấn Enter để tìm");
+        // Bo viền cho ô tìm kiếm
+        txtTimKiem.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            new EmptyBorder(0, 10, 0, 10)
+        ));
         
         JButton btnTim = createButton("Tìm kiếm", mainColor, Color.WHITE);
         JButton btnLamMoi = createButton("Làm Mới", new Color(108, 117, 125), Color.WHITE);
         
-        pnlSearch.add(new JLabel("Lọc theo: "));
         pnlSearch.add(cboLoc);
         pnlSearch.add(txtTimKiem);
         pnlSearch.add(btnTim);
@@ -67,65 +77,92 @@ public class GUI_QuanLySach extends JPanel {
         
         add(pnlTop, BorderLayout.NORTH);
 
-        // --- TABLE ---
+        // --- 2. TABLE (BẢNG DỮ LIỆU) ---
         JPanel pnlTable = new JPanel(new BorderLayout());
-        pnlTable.setBorder(new EmptyBorder(10, 20, 10, 20));
+        pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
         pnlTable.setBackground(bgColor);
 
-        String[] cols = {"Mã Cuốn", "Mã Sách", "Tên Sách", "Thể Loại", "Tác Giả", "Năm XB", "Giá", "Tình Trạng"};
+        String[] cols = {"Mã Cuốn", "Mã Sách", "Tên Sách", "Thể Loại", "Tác Giả", "Năm XB", "Giá Tiền", "Tình Trạng"};
         modelSach = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         tableSach = new JTable(modelSach);
-        tableSach.setRowHeight(35);
+        
+        // [STYLE PREMIUM]
+        tableSach.setRowHeight(40); // Dòng cao thoáng
         tableSach.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        tableSach.setShowGrid(true);
-        tableSach.setGridColor(new Color(230, 230, 230));
+        tableSach.setShowVerticalLines(false); // Bỏ kẻ dọc, chỉ giữ kẻ ngang
+        tableSach.setIntercellSpacing(new Dimension(0, 0));
+        tableSach.setSelectionBackground(new Color(232, 242, 252)); // Màu khi chọn dòng (Xanh nhạt)
+        tableSach.setSelectionForeground(Color.BLACK);
 
+        // Style Header
         JTableHeader header = tableSach.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(new Color(245, 245, 245));
+        header.setBackground(Color.WHITE);
+        header.setForeground(mainColor);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor)); // Kẻ dưới đậm màu xanh
         header.setPreferredSize(new Dimension(0, 40));
 
+        // Renderer chung: Căn giữa và tô màu nền so le (Striped Rows)
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    // Dòng chẵn trắng, dòng lẻ xám nhạt
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                }
+                setBorder(new EmptyBorder(0, 5, 0, 5));
+                return c;
+            }
+        };
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        
+        // Áp dụng renderer cho các cột
+        for (int i = 0; i < tableSach.getColumnCount(); i++) {
+            tableSach.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+        
+        // Renderer riêng cho cột Tình trạng (Cột cuối - index 7) để tô màu chữ
         tableSach.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                
                 String status = (value != null) ? value.toString() : "";
                 if (status.contains("Còn") || status.contains("sẵn")) {
-                    c.setForeground(new Color(30, 130, 30));
-                    c.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    c.setForeground(new Color(40, 167, 69)); // Xanh lá đậm
+                    setFont(new Font("Segoe UI", Font.BOLD, 13));
                 } else {
-                    c.setForeground(Color.RED);
-                    c.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    c.setForeground(new Color(220, 53, 69)); // Đỏ
+                    setFont(new Font("Segoe UI", Font.BOLD, 13));
                 }
                 setHorizontalAlignment(CENTER);
                 return c;
             }
         });
 
+        // Chỉnh độ rộng cột
         tableSach.getColumnModel().getColumn(0).setPreferredWidth(80);
-        tableSach.getColumnModel().getColumn(2).setPreferredWidth(250);
+        tableSach.getColumnModel().getColumn(1).setPreferredWidth(80);
+        tableSach.getColumnModel().getColumn(2).setPreferredWidth(250); // Tên sách rộng hơn
         
-        pnlTable.add(new JScrollPane(tableSach), BorderLayout.CENTER);
+        JScrollPane sc = new JScrollPane(tableSach);
+        sc.getViewport().setBackground(Color.WHITE);
+        sc.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        pnlTable.add(sc, BorderLayout.CENTER);
         add(pnlTable, BorderLayout.CENTER);
 
-        // --- FOOTER BUTTONS ---
+        // --- 3. FOOTER (BUTTONS) ---
         JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
         pnlFooter.setBackground(bgColor);
 
         JButton btnThem = createButton("Thêm Sách", new Color(40, 167, 69), Color.WHITE);
-        btnThem.setPreferredSize(new Dimension(150, 45));
-
-        // --- [ĐÃ SỬA]: Đổi chữ thành màu TRẮNG (Color.WHITE) ---
         JButton btnSua = createButton("Sửa Sách", new Color(255, 193, 7), Color.WHITE);
-        btnSua.setPreferredSize(new Dimension(150, 45));
-
         JButton btnChiTiet = createButton("Xem Chi Tiết", new Color(23, 162, 184), Color.WHITE);
-        btnChiTiet.setPreferredSize(new Dimension(150, 45));
-
         JButton btnXoa = createButton("Xóa Sách", new Color(220, 53, 69), Color.WHITE);
-        btnXoa.setPreferredSize(new Dimension(150, 45));
         
         pnlFooter.add(btnThem);
         pnlFooter.add(btnSua);
@@ -150,7 +187,7 @@ public class GUI_QuanLySach extends JPanel {
         btnSua.addActionListener(e -> {
             int row = tableSach.getSelectedRow();
             if (row < 0) { JOptionPane.showMessageDialog(this, "Vui lòng chọn sách cần sửa!"); return; }
-            String maSach = tableSach.getValueAt(row, 0).toString();
+            String maSach = tableSach.getValueAt(row, 0).toString(); // Lấy Mã Cuốn
             new GUI_DialogThemSach(SwingUtilities.getWindowAncestor(this), GUI_QuanLySach.this, maSach).setVisible(true);
         });
 
@@ -177,11 +214,11 @@ public class GUI_QuanLySach extends JPanel {
     }
 
     private void themDongVaoBang(DTO_Sach s) {
-        String trangThai = (s.getSoLuong() > 0) ? "Còn sẵn" : "Hết hàng";
+        String trangThai = (s.getSoLuong() > 0) ? "Còn sẵn (" + s.getSoLuong() + ")" : "Hết hàng";
         String tenTL = (s.getTenTheLoai() != null && !s.getTenTheLoai().isEmpty()) ? s.getTenTheLoai() : s.getMaTheLoai();
         
         modelSach.addRow(new Object[] {
-            s.getMaCuonSach(), s.getMaCuonSach(), s.getTenSach(), tenTL,
+            s.getMaCuonSach(), s.getMaSach(), s.getTenSach(), tenTL,
             s.getTacGia(), s.getNamXuatBan(), String.format("%,.0f", s.getGia()), trangThai
         });
     }
@@ -220,6 +257,7 @@ public class GUI_QuanLySach extends JPanel {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setPreferredSize(new Dimension(160, 45)); // Nút to hơn chút
         return btn;
     }
 }

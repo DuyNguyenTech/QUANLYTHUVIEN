@@ -11,12 +11,13 @@ import java.util.ArrayList;
 
 public class GUI_LichSuMuon extends JPanel {
 
+    // Màu chủ đạo
     private Color mainColor = new Color(50, 115, 220); 
     private Color bgColor = new Color(245, 248, 253);
     
     private JTable table;
     private DefaultTableModel model;
-    private DAL_PhieuMuon dal = new DAL_PhieuMuon(); // [SỬA]
+    private DAL_PhieuMuon dal = new DAL_PhieuMuon(); 
     private String currentMaDocGia; 
     private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -31,19 +32,24 @@ public class GUI_LichSuMuon extends JPanel {
         setLayout(new BorderLayout());
         setBackground(bgColor);
 
-        // --- HEADER ---
-        JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // --- 1. HEADER ---
+        JPanel pnlHeader = new JPanel(new BorderLayout());
         pnlHeader.setBackground(Color.WHITE);
         pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
+        // Kẻ đường line dưới
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+            new EmptyBorder(15, 20, 15, 20)
+        ));
         
-        JLabel lblTitle = new JLabel("LỊCH SỬ MƯỢN SÁCH");
+        JLabel lblTitle = new JLabel("LỊCH SỬ MƯỢN SÁCH CỦA BẠN");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitle.setForeground(mainColor);
-        pnlHeader.add(lblTitle);
+        pnlHeader.add(lblTitle, BorderLayout.WEST);
         
         add(pnlHeader, BorderLayout.NORTH);
 
-        // --- TABLE ---
+        // --- 2. TABLE ---
         JPanel pnlTable = new JPanel(new BorderLayout());
         pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
         pnlTable.setBackground(bgColor);
@@ -54,61 +60,104 @@ public class GUI_LichSuMuon extends JPanel {
         };
         
         table = new JTable(model);
-        table.setRowHeight(35);
+        
+        // [STYLE PREMIUM]
+        table.setRowHeight(40); // Dòng cao thoáng
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setShowGrid(true);
-        table.setGridColor(new Color(230, 230, 230));
+        table.setShowVerticalLines(false); // Bỏ kẻ dọc
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(new Color(232, 242, 252)); // Màu chọn xanh nhạt
+        table.setSelectionForeground(Color.BLACK);
 
         // Style Header
         JTableHeader header = table.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(new Color(240, 240, 240));
+        header.setBackground(Color.WHITE);
+        header.setForeground(mainColor);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor));
         header.setPreferredSize(new Dimension(0, 40));
 
-        // Căn giữa nội dung bảng
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        // Renderer Chung (Căn giữa + Striped Rows)
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                }
+                setBorder(new EmptyBorder(0, 5, 0, 5));
+                return c;
+            }
+        };
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        
+        // Áp dụng renderer cho các cột (trừ cột Tên Sách và Trạng Thái)
         for(int i=0; i<cols.length; i++) {
-            if(i != 1) { // Trừ cột Tên Sách (để căn trái)
+            if(i != 1 && i != 5) { 
                 table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
             }
         }
         
-        // Cột tên sách rộng hơn
-        table.getColumnModel().getColumn(1).setPreferredWidth(250);
+        // Renderer Cột Tên Sách (Căn trái)
+        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                setBorder(new EmptyBorder(0, 10, 0, 10)); // Padding
+                return c;
+            }
+        };
+        leftRenderer.setHorizontalAlignment(JLabel.LEFT);
+        table.getColumnModel().getColumn(1).setCellRenderer(leftRenderer);
+        table.getColumnModel().getColumn(1).setPreferredWidth(250); // Rộng hơn
 
-        // Renderer tô màu Trạng Thái
+        // Renderer Cột Trạng Thái (Tô màu chữ + Striped Rows)
         table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 String status = (value != null) ? value.toString() : "";
-                c.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 
-                if (status.equals("Đang mượn")) {
-                    c.setForeground(new Color(0, 123, 255)); // Xanh dương
-                } else if (status.equals("Chờ duyệt")) {
-                    c.setForeground(new Color(255, 152, 0)); // Cam (Màu cho trạng thái ONLINE)
-                } else if (status.equals("Quá hạn")) {
-                    c.setForeground(Color.RED);
-                } else {
-                    c.setForeground(new Color(40, 167, 69)); // Xanh lá (Đã trả)
+                // Giữ nền sọc
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
                 }
+                
+                c.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                
+                // Tô màu chữ
+                if (status.contains("Đang mượn")) {
+                    c.setForeground(new Color(0, 123, 255)); // Xanh dương
+                } else if (status.contains("Chờ duyệt")) {
+                    c.setForeground(new Color(255, 152, 0)); // Cam (Quan trọng cho Online)
+                } else if (status.contains("Quá hạn")) {
+                    c.setForeground(new Color(220, 53, 69)); // Đỏ
+                } else if (status.contains("Đã trả")) {
+                    c.setForeground(new Color(40, 167, 69)); // Xanh lá
+                } else {
+                    c.setForeground(Color.BLACK);
+                }
+                
                 setHorizontalAlignment(JLabel.CENTER);
                 return c;
             }
         });
 
-        pnlTable.add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane sc = new JScrollPane(table);
+        sc.getViewport().setBackground(Color.WHITE);
+        sc.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        
+        pnlTable.add(sc, BorderLayout.CENTER);
         add(pnlTable, BorderLayout.CENTER);
         
-        // --- BUTTON LÀM MỚI (Góc dưới) ---
+        // --- 3. FOOTER (BUTTON REFRESH) ---
         JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlFooter.setBackground(bgColor);
-        pnlFooter.setBorder(new EmptyBorder(0, 0, 10, 20));
+        pnlFooter.setBorder(new EmptyBorder(0, 0, 20, 20));
         
         JButton btnRefresh = new JButton("Làm mới danh sách");
-        btnRefresh.setPreferredSize(new Dimension(160, 40));
+        btnRefresh.setPreferredSize(new Dimension(180, 45));
         btnRefresh.setBackground(mainColor);
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -126,20 +175,26 @@ public class GUI_LichSuMuon extends JPanel {
         model.setRowCount(0);
         if (currentMaDocGia == null || currentMaDocGia.isEmpty()) return;
 
-        // [SỬA LẠI] Gọi hàm getLichSuMuon từ DAL_PhieuMuon
+        // Gọi hàm lấy lịch sử
         ArrayList<DTO_PhieuMuon> list = dal.getLichSuMuon(currentMaDocGia);
         
         for (DTO_PhieuMuon pm : list) {
             String ngayTra = (pm.getNgayTra() != null) ? sdf.format(pm.getNgayTra()) : "Chưa trả";
             String tienPhat = (pm.getTienPhat() > 0) ? String.format("%,.0f", pm.getTienPhat()) : "-";
             
+            // Xử lý hiển thị trạng thái cho thân thiện
+            String trangThaiHienThi = pm.getTinhTrang();
+            if(pm.getMaThuThu() != null && pm.getMaThuThu().equalsIgnoreCase("ONLINE") && pm.getTinhTrang().equals("Đang mượn")) {
+                 trangThaiHienThi = "Chờ duyệt"; // Nếu mượn online mà chưa được admin duyệt
+            }
+
             model.addRow(new Object[]{
                 pm.getMaPhieuMuon(),
-                pm.getTenSach(), // Đã có nhờ update DTO
+                pm.getTenSach(), 
                 sdf.format(pm.getNgayMuon()),
                 sdf.format(pm.getNgayHenTra()),
                 ngayTra,
-                pm.getTinhTrang(), // Sẽ hiện "Chờ duyệt" nếu MaThuThu là ONLINE
+                trangThaiHienThi, 
                 tienPhat
             });
         }

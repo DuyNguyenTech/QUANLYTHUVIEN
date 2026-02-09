@@ -6,12 +6,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+
+import CHUNG.ExcelExporter; // Import tiện ích xuất Excel
 
 public class GUI_DialogThongKeSach extends JDialog {
 
@@ -20,8 +17,13 @@ public class GUI_DialogThongKeSach extends JDialog {
     private JTable table;
     private DefaultTableModel model;
     private JLabel lblTongSoLuong;
+    
+    // Màu chủ đạo
+    private Color mainColor = new Color(50, 115, 220);
 
     public GUI_DialogThongKeSach(Component parent) {
+        // Nếu parent là JPanel hoặc Component khác, lấy Window chứa nó
+        super(SwingUtilities.getWindowAncestor(parent), ModalityType.APPLICATION_MODAL);
         initUI();
         // Mặc định chọn "Đang mượn" khi mở lên
         rdoDangMuon.setSelected(true);
@@ -31,31 +33,38 @@ public class GUI_DialogThongKeSach extends JDialog {
 
     private void initUI() {
         setTitle("CHI TIẾT THỐNG KÊ TÀI LIỆU");
-        setSize(900, 600);
+        setSize(950, 650);
         setLocationRelativeTo(null);
-        setModal(true);
         setLayout(new BorderLayout());
 
         // --- 1. HEADER ---
-        JLabel lblTitle = new JLabel("THỐNG KÊ TÀI LIỆU", SwingConstants.CENTER);
+        JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        pnlHeader.setBackground(mainColor);
+        pnlHeader.setBorder(new EmptyBorder(15, 0, 15, 0));
+        
+        JLabel lblTitle = new JLabel("BÁO CÁO TÌNH TRẠNG SÁCH");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblTitle.setOpaque(true);
-        lblTitle.setBackground(new Color(100, 149, 237)); // Màu xanh dịu
         lblTitle.setForeground(Color.WHITE);
-        lblTitle.setPreferredSize(new Dimension(0, 60));
-        add(lblTitle, BorderLayout.NORTH);
+        pnlHeader.add(lblTitle);
+        
+        add(pnlHeader, BorderLayout.NORTH);
 
         // --- 2. CONTENT ---
         JPanel pnlContent = new JPanel(new BorderLayout(10, 10));
         pnlContent.setBorder(new EmptyBorder(10, 20, 10, 20));
+        pnlContent.setBackground(Color.WHITE);
 
         // A. Filter Radio Buttons
-        JPanel pnlFilter = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 10));
+        JPanel pnlFilter = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10));
+        pnlFilter.setBackground(Color.WHITE);
+        pnlFilter.setBorder(BorderFactory.createTitledBorder("Lọc dữ liệu"));
+        
         rdoDangMuon = new JRadioButton("Sách đang cho mượn");
         rdoTrongKho = new JRadioButton("Sách còn trong kho");
         
-        rdoDangMuon.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        rdoTrongKho.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        Font fontRadio = new Font("Segoe UI", Font.PLAIN, 14);
+        rdoDangMuon.setFont(fontRadio); rdoDangMuon.setBackground(Color.WHITE);
+        rdoTrongKho.setFont(fontRadio); rdoTrongKho.setBackground(Color.WHITE);
         
         ButtonGroup group = new ButtonGroup();
         group.add(rdoDangMuon);
@@ -63,73 +72,102 @@ public class GUI_DialogThongKeSach extends JDialog {
         
         pnlFilter.add(rdoDangMuon);
         pnlFilter.add(rdoTrongKho);
+        
+        pnlContent.add(pnlFilter, BorderLayout.NORTH);
 
         // B. Table
-        String[] cols = {"Mã Cuốn Sách", "Tên Sách", "Tình Trạng"};
-        model = new DefaultTableModel(cols, 0) { public boolean isCellEditable(int r, int c) { return false; } };
+        String[] cols = {"Mã Sách", "Tên Sách", "Tình Trạng"};
+        model = new DefaultTableModel(cols, 0) { 
+            public boolean isCellEditable(int r, int c) { return false; } 
+        };
         table = new JTable(model);
-        table.setRowHeight(30);
+        
+        // Style Table Premium
+        table.setRowHeight(35);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setSelectionBackground(new Color(232, 242, 252));
+        table.setSelectionForeground(Color.BLACK);
         
         JTableHeader h = table.getTableHeader();
         h.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        h.setBackground(new Color(240, 240, 240));
+        h.setBackground(Color.WHITE);
+        h.setForeground(mainColor);
+        h.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor));
+        h.setPreferredSize(new Dimension(0, 40));
 
-        // Căn chỉnh cột
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        // Renderer
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if(!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                return c;
+            }
+        };
         center.setHorizontalAlignment(JLabel.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(center);
-        table.getColumnModel().getColumn(0).setPreferredWidth(100);
-        table.getColumnModel().getColumn(1).setPreferredWidth(350);
-        table.getColumnModel().getColumn(2).setPreferredWidth(250);
-
-        // C. Panel Tổng Số Lượng
+        
+        // Apply renderer
+        for(int i=0; i<cols.length; i++) table.getColumnModel().getColumn(i).setCellRenderer(center);
+        
+        // Độ rộng cột
+        table.getColumnModel().getColumn(0).setPreferredWidth(120);
+        table.getColumnModel().getColumn(1).setPreferredWidth(400); // Tên sách rộng
+        
+        // C. Footer Info (Tổng số lượng)
         JPanel pnlInfo = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlInfo.setBackground(new Color(255, 250, 240)); 
-        pnlInfo.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        pnlInfo.setBackground(new Color(245, 248, 253));
+        pnlInfo.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         
-        JLabel lblText = new JLabel("Tổng số lượng sách: ");
-        lblText.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JLabel lblText = new JLabel("Tổng số lượng sách trong danh sách: ");
+        lblText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         
-        lblTongSoLuong = new JLabel("Đang tính toán...");
+        lblTongSoLuong = new JLabel("Calculating...");
         lblTongSoLuong.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTongSoLuong.setForeground(Color.RED);
+        lblTongSoLuong.setForeground(new Color(220, 53, 69)); // Đỏ
         
         pnlInfo.add(lblText);
         pnlInfo.add(lblTongSoLuong);
 
-        // Lắp ghép phần trên
-        JPanel pnlTop = new JPanel(new BorderLayout());
-        pnlTop.add(pnlFilter, BorderLayout.NORTH);
+        // Ghép Table + Info vào Panel giữa
+        JPanel pnlCenterWrapper = new JPanel(new BorderLayout());
+        pnlCenterWrapper.add(new JScrollPane(table), BorderLayout.CENTER);
+        pnlCenterWrapper.add(pnlInfo, BorderLayout.SOUTH);
         
-        JLabel lblListTitle = new JLabel(" Danh sách:");
-        lblListTitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblListTitle.setBorder(new EmptyBorder(5, 0, 5, 0));
-        pnlTop.add(lblListTitle, BorderLayout.SOUTH);
-        
-        pnlContent.add(pnlTop, BorderLayout.NORTH);
-        pnlContent.add(new JScrollPane(table), BorderLayout.CENTER);
-        pnlContent.add(pnlInfo, BorderLayout.SOUTH);
-
+        pnlContent.add(pnlCenterWrapper, BorderLayout.CENTER);
         add(pnlContent, BorderLayout.CENTER);
 
         // --- 3. BOTTOM BUTTONS ---
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pnlBot.setBackground(new Color(245, 248, 253));
         pnlBot.setBorder(new EmptyBorder(10, 20, 10, 20));
         
-        JButton btnLog = new JButton("Ghi log");
-        btnLog.setPreferredSize(new Dimension(100, 35));
-        btnLog.setBackground(Color.WHITE);
-        btnLog.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        JButton btnXuat = new JButton("Xuất Excel");
+        btnXuat.setPreferredSize(new Dimension(140, 40));
+        btnXuat.setBackground(new Color(40, 167, 69)); // Xanh lá Excel
+        btnXuat.setForeground(Color.WHITE);
+        btnXuat.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnXuat.setFocusPainted(false);
+        btnXuat.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        pnlBot.add(btnLog);
+        JButton btnDong = new JButton("Đóng");
+        btnDong.setPreferredSize(new Dimension(100, 40));
+        btnDong.setBackground(new Color(220, 53, 69));
+        btnDong.setForeground(Color.WHITE);
+        btnDong.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnDong.setFocusPainted(false);
+        
+        pnlBot.add(btnXuat);
+        pnlBot.add(btnDong);
         add(pnlBot, BorderLayout.SOUTH);
 
         // --- EVENTS ---
         rdoDangMuon.addActionListener(e -> loadData("MUON"));
         rdoTrongKho.addActionListener(e -> loadData("KHO"));
         
-        btnLog.addActionListener(e -> xuLyGhiLog());
+        btnXuat.addActionListener(e -> xuLyXuatExcel());
+        btnDong.addActionListener(e -> dispose());
     }
 
     private void loadData(String type) {
@@ -143,54 +181,30 @@ public class GUI_DialogThongKeSach extends JDialog {
         }
 
         for (DTO_ThongKeSach s : list) {
-            model.addRow(new Object[]{s.getMaSach(), s.getTenSach(), s.getTinhTrang()});
+            // Hiển thị trạng thái đẹp hơn
+            String tt = s.getTinhTrang();
+            if(type.equals("MUON")) tt = "Đang được mượn";
+            else if(type.equals("KHO")) tt = "Sẵn sàng";
+            
+            model.addRow(new Object[]{s.getMaSach(), s.getTenSach(), tt});
         }
+        lblTongSoLuong.setText(list.size() + " cuốn");
     }
 
     private void loadTongTaiSan() {
         new Thread(() -> {
-            int tong = dal.getTongTaiSanSach();
-            SwingUtilities.invokeLater(() -> lblTongSoLuong.setText(tong + " cuốn"));
+            // Có thể dùng hàm này để hiện tổng toàn bộ kho (không phụ thuộc filter)
+             int tong = dal.getTongTaiSanSach();
+             SwingUtilities.invokeLater(() -> lblTongSoLuong.setText(tong + " cuốn"));
         }).start();
     }
 
-    // --- CẬP NHẬT: LƯU FILE RA DESKTOP ---
-    private void xuLyGhiLog() {
-        try {
-            // 1. Tạo tên file theo thời gian
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            
-            // 2. Lấy đường dẫn Desktop của người dùng
-            String userHome = System.getProperty("user.home");
-            String desktopPath = userHome + File.separator + "Desktop" + File.separator;
-            
-            // 3. Đường dẫn file hoàn chỉnh
-            String fileName = desktopPath + "Log_ThongKe_" + timeStamp + ".txt";
-
-            PrintWriter pw = new PrintWriter(new FileWriter(fileName));
-            
-            pw.println("BÁO CÁO THỐNG KÊ TÀI LIỆU THƯ VIỆN");
-            pw.println("Thời gian xuất: " + new Date());
-            pw.println("Tổng số sách: " + lblTongSoLuong.getText());
-            pw.println("--------------------------------------------------");
-            pw.println("Loại danh sách: " + (rdoDangMuon.isSelected() ? "Sách Đang Cho Mượn" : "Sách Còn Trong Kho"));
-            pw.println("Số lượng bản ghi: " + model.getRowCount());
-            pw.println("--------------------------------------------------");
-            pw.printf("%-15s %-40s %-30s\n", "MÃ SÁCH", "TÊN SÁCH", "TÌNH TRẠNG");
-            pw.println("--------------------------------------------------");
-            
-            for(int i=0; i<model.getRowCount(); i++) {
-                String ma = model.getValueAt(i, 0).toString();
-                String ten = model.getValueAt(i, 1).toString();
-                String tt = model.getValueAt(i, 2).toString();
-                pw.printf("%-15s %-40s %-30s\n", ma, ten, tt);
-            }
-            pw.close();
-            
-            JOptionPane.showMessageDialog(this, "Đã ghi log thành công!" + fileName);
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi ghi file!");
+    // Xử lý xuất Excel chuyên nghiệp
+    private void xuLyXuatExcel() {
+        if (table.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+        new ExcelExporter().exportTable(table);
     }
 }

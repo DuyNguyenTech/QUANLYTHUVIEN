@@ -22,49 +22,50 @@ public class GUI_ThongKe extends JPanel {
 
         // --- HEADER ---
         JLabel lblHeader = new JLabel("TỔNG QUAN HỆ THỐNG", SwingConstants.CENTER);
-        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblHeader.setForeground(new Color(50, 115, 220));
         lblHeader.setOpaque(true);
         lblHeader.setBackground(Color.WHITE); 
-        lblHeader.setBorder(new EmptyBorder(20, 0, 20, 0));
-        add(lblHeader, BorderLayout.NORTH);
+        lblHeader.setBorder(new EmptyBorder(25, 0, 25, 0));
+        
+        // Thêm đường kẻ dưới header
+        JPanel pnlHeaderWrapper = new JPanel(new BorderLayout());
+        pnlHeaderWrapper.add(lblHeader, BorderLayout.CENTER);
+        pnlHeaderWrapper.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)));
+        
+        add(pnlHeaderWrapper, BorderLayout.NORTH);
 
         // --- DASHBOARD (3 Ô) ---
         JPanel pnlDashboard = new JPanel(new GridLayout(1, 3, 40, 0)); 
         pnlDashboard.setBackground(new Color(245, 248, 253));
-        pnlDashboard.setBorder(new EmptyBorder(30, 30, 300, 30));
+        // Padding xung quanh để các card không dính sát lề
+        pnlDashboard.setBorder(new EmptyBorder(40, 40, 300, 40)); 
 
-        // 1. CARD SÁCH
+        // 1. CARD SÁCH (Màu Xanh Dương)
         lblSoLuongSach = new JLabel("0");
-        JPanel pnlSach = createCard("THỐNG KÊ SÁCH", lblSoLuongSach, new Color(50, 115, 220));
+        JPanel pnlSach = createCard("KHO SÁCH", "Tổng đầu sách hiện có", lblSoLuongSach, new Color(50, 115, 220));
         
-        pnlSach.setCursor(new Cursor(Cursor.HAND_CURSOR));
         pnlSach.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseClicked(MouseEvent e) {
                 new GUI_DialogThongKeSach(SwingUtilities.getWindowAncestor(GUI_ThongKe.this)).setVisible(true);
             }
         });
 
-        // 2. CARD MƯỢN TRẢ
+        // 2. CARD MƯỢN TRẢ (Màu Xanh Lá)
         lblSoLuongMuon = new JLabel("0");
-        JPanel pnlMuon = createCard("THỐNG KÊ MƯỢN TRẢ", lblSoLuongMuon, new Color(40, 167, 69));
+        JPanel pnlMuon = createCard("HOẠT ĐỘNG", "Lượt mượn sách tháng này", lblSoLuongMuon, new Color(40, 167, 69));
         
-        pnlMuon.setCursor(new Cursor(Cursor.HAND_CURSOR));
         pnlMuon.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseClicked(MouseEvent e) {
                 new GUI_DialogThongKeMuonTra(SwingUtilities.getWindowAncestor(GUI_ThongKe.this)).setVisible(true);
             }
         });
 
-        // 3. CARD VI PHẠM
+        // 3. CARD VI PHẠM (Màu Đỏ)
         lblSoLuongViPham = new JLabel("0");
-        JPanel pnlViPham = createCard("THỐNG KÊ VI PHẠM", lblSoLuongViPham, new Color(220, 53, 69));
+        JPanel pnlViPham = createCard("CẢNH BÁO", "Số phiếu quá hạn / Vi phạm", lblSoLuongViPham, new Color(220, 53, 69));
         
-        pnlViPham.setCursor(new Cursor(Cursor.HAND_CURSOR));
         pnlViPham.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseClicked(MouseEvent e) {
                 new GUI_DialogThongKeViPham(SwingUtilities.getWindowAncestor(GUI_ThongKe.this)).setVisible(true);
             }
@@ -80,56 +81,78 @@ public class GUI_ThongKe extends JPanel {
 
     // --- HÀM LOAD DỮ LIỆU ---
     public void loadData() {
+        // Chạy thread riêng để không bị đơ giao diện khi query lâu
         new Thread(() -> {
             int sach = dal.getTongDauSach();
             int muon = dal.getTongPhieuMuon();
             int vipham = dal.getTongViPham();
             
             SwingUtilities.invokeLater(() -> {
-                lblSoLuongSach.setText(String.valueOf(sach));
-                lblSoLuongMuon.setText(String.valueOf(muon));
-                lblSoLuongViPham.setText(String.valueOf(vipham));
+                lblSoLuongSach.setText(String.format("%,d", sach));
+                lblSoLuongMuon.setText(String.format("%,d", muon));
+                lblSoLuongViPham.setText(String.format("%,d", vipham));
             });
         }).start();
     }
 
     // --- HÀM TẠO GIAO DIỆN CARD ---
-    private JPanel createCard(String title, JLabel lblNumber, Color themeColor) {
+    private JPanel createCard(String title, String subtitle, JLabel lblNumber, Color themeColor) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
+        panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // Phần Tiêu đề (Màu nền)
+        // Header của Card (Màu nền)
+        JPanel pnlTitle = new JPanel(new BorderLayout());
+        pnlTitle.setBackground(themeColor);
+        pnlTitle.setBorder(new EmptyBorder(15, 0, 15, 0));
+        
         JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTitle.setForeground(Color.WHITE);
-        lblTitle.setOpaque(true);
-        lblTitle.setBackground(themeColor);
-        lblTitle.setPreferredSize(new Dimension(0, 50));
+        pnlTitle.add(lblTitle, BorderLayout.CENTER);
         
-        // Phần Số liệu (Ở giữa)
-        JPanel pnlCenter = new JPanel(new GridBagLayout());
-        pnlCenter.setBackground(Color.WHITE);
+        // Phần Nội dung (Số liệu + Subtitle)
+        JPanel pnlContent = new JPanel(new GridBagLayout());
+        pnlContent.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.anchor = GridBagConstraints.CENTER;
         
-        lblNumber.setFont(new Font("Segoe UI", Font.BOLD, 80)); // Tăng size chữ số lên cho đẹp
+        // Số liệu to
+        lblNumber.setFont(new Font("Segoe UI", Font.BOLD, 60)); // Số to hơn nữa
         lblNumber.setForeground(themeColor);
-        pnlCenter.add(lblNumber);
+        pnlContent.add(lblNumber, gbc);
+        
+        // Subtitle nhỏ
+        JLabel lblSubtitle = new JLabel(subtitle);
+        lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblSubtitle.setForeground(Color.GRAY);
+        pnlContent.add(lblSubtitle, gbc);
 
-        // Phần Đáy (Đã xóa ký tự lỗi)
+        // Footer "Xem chi tiết" - [ĐÃ XÓA KÝ TỰ MŨI TÊN LỖI]
         JLabel lblFooter = new JLabel("Xem chi tiết", SwingConstants.CENTER);
-        lblFooter.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-        lblFooter.setForeground(Color.GRAY);
-        lblFooter.setPreferredSize(new Dimension(0, 30));
-        lblFooter.setBorder(new EmptyBorder(5, 0, 5, 0));
+        lblFooter.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblFooter.setForeground(themeColor);
+        lblFooter.setBorder(new EmptyBorder(10, 0, 15, 0));
+        lblFooter.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        panel.add(lblTitle, BorderLayout.NORTH);
-        panel.add(pnlCenter, BorderLayout.CENTER);
+        panel.add(pnlTitle, BorderLayout.NORTH);
+        panel.add(pnlContent, BorderLayout.CENTER);
         panel.add(lblFooter, BorderLayout.SOUTH);
 
-        // Viền bóng đổ nhẹ
-        panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(0, 0, 0, 0)
-        ));
+        // Viền và Hiệu ứng Hover đơn giản
+        panel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+        
+        panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                panel.setBorder(BorderFactory.createLineBorder(themeColor, 2)); // Đổi màu viền khi hover
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                panel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+            }
+        });
 
         return panel;
     }

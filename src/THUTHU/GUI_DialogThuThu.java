@@ -2,10 +2,11 @@ package THUTHU;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Date;
-import java.awt.event.ActionEvent; // Added import
-import java.awt.event.ActionListener; // Added import
 
 public class GUI_DialogThuThu extends JDialog {
 
@@ -16,6 +17,9 @@ public class GUI_DialogThuThu extends JDialog {
     private JTextField txtMa, txtTen, txtDiaChi, txtSDT, txtUser, txtPass;
     private JSpinner spnNgaySinh;
     private JComboBox<String> cboGioiTinh, cboQuyen;
+    
+    // Màu chủ đạo
+    private Color mainColor = new Color(50, 115, 220);
 
     public GUI_DialogThuThu(GUI_QuanLyThuThu parent, DTO_ThuThu tt) {
         this.parentGUI = parent;
@@ -26,73 +30,106 @@ public class GUI_DialogThuThu extends JDialog {
     }
 
     private void initUI() {
-        setTitle(nhanVienEdit == null ? "THÊM NHÂN VIÊN" : "CẬP NHẬT NHÂN VIÊN");
-        setSize(800, 550);
+        setTitle(nhanVienEdit == null ? "THÊM NHÂN VIÊN MỚI" : "CẬP NHẬT THÔNG TIN");
+        setSize(850, 580);
         setLocationRelativeTo(null);
         setModal(true);
         setLayout(new BorderLayout());
+        setResizable(false);
 
-        // Header
-        JLabel lblTitle = new JLabel(getTitle(), SwingConstants.CENTER);
+        // --- 1. HEADER ---
+        Color headerColor = nhanVienEdit == null ? mainColor : new Color(255, 152, 0);
+        JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        pnlHeader.setBackground(headerColor);
+        pnlHeader.setBorder(new EmptyBorder(10, 0, 10, 0));
+        
+        JLabel lblTitle = new JLabel(getTitle());
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblTitle.setOpaque(true);
-        lblTitle.setBackground(nhanVienEdit == null ? new Color(50, 115, 220) : new Color(255, 152, 0));
         lblTitle.setForeground(Color.WHITE);
-        lblTitle.setPreferredSize(new Dimension(0, 50));
-        add(lblTitle, BorderLayout.NORTH);
+        pnlHeader.add(lblTitle);
+        add(pnlHeader, BorderLayout.NORTH);
 
-        // Content
-        JPanel pnlContent = new JPanel(new GridLayout(1, 2, 15, 0));
-        pnlContent.setBorder(new EmptyBorder(15, 15, 15, 15));
+        // --- 2. CONTENT ---
+        JPanel pnlContent = new JPanel(new GridLayout(1, 2, 20, 0)); // Chia 2 cột lớn
+        pnlContent.setBorder(new EmptyBorder(20, 20, 20, 20));
+        pnlContent.setBackground(Color.WHITE);
 
         // -- Cột Trái: Thông tin cá nhân --
-        JPanel pnlLeft = new JPanel(new GridLayout(6, 2, 10, 15));
-        pnlLeft.setBorder(BorderFactory.createTitledBorder("Thông tin cá nhân"));
+        JPanel pnlLeft = new JPanel(new GridBagLayout());
+        pnlLeft.setBackground(Color.WHITE);
+        pnlLeft.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), "Thông tin cá nhân",
+            TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
+            new Font("Segoe UI", Font.BOLD, 14), headerColor));
         
-        txtMa = new JTextField(); txtMa.setEditable(false);
-        txtTen = new JTextField();
-        txtDiaChi = new JTextField();
-        txtSDT = new JTextField();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        txtMa = createTextField(); txtMa.setEditable(false); txtMa.setBackground(new Color(245, 245, 245));
+        txtTen = createTextField();
+        txtDiaChi = createTextField();
+        txtSDT = createTextField();
         spnNgaySinh = new JSpinner(new SpinnerDateModel());
         spnNgaySinh.setEditor(new JSpinner.DateEditor(spnNgaySinh, "dd/MM/yyyy"));
+        spnNgaySinh.setPreferredSize(new Dimension(200, 35));
+        spnNgaySinh.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        
         cboGioiTinh = new JComboBox<>(new String[]{"Nam", "Nữ"});
+        cboGioiTinh.setPreferredSize(new Dimension(200, 35));
+        cboGioiTinh.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        addComp(pnlLeft, "Mã NV:", txtMa);
-        addComp(pnlLeft, "Họ Tên:", txtTen);
-        addComp(pnlLeft, "Ngày Sinh:", spnNgaySinh);
-        addComp(pnlLeft, "Giới Tính:", cboGioiTinh);
-        addComp(pnlLeft, "Địa Chỉ:", txtDiaChi);
-        addComp(pnlLeft, "SĐT:", txtSDT);
-
-        // -- Cột Phải: Tài khoản đăng nhập --
-        JPanel pnlRight = new JPanel(new GridLayout(6, 2, 10, 15));
-        pnlRight.setBorder(BorderFactory.createTitledBorder("Tài khoản hệ thống"));
+        int row = 0;
+        addComp(pnlLeft, gbc, row++, "Mã NV:", txtMa);
+        addComp(pnlLeft, gbc, row++, "Họ Tên:", txtTen);
+        addComp(pnlLeft, gbc, row++, "Ngày Sinh:", spnNgaySinh);
+        addComp(pnlLeft, gbc, row++, "Giới Tính:", cboGioiTinh);
+        addComp(pnlLeft, gbc, row++, "Địa Chỉ:", txtDiaChi);
+        addComp(pnlLeft, gbc, row++, "SĐT:", txtSDT);
         
-        txtUser = new JTextField();
-        txtPass = new JTextField();
+        // Đẩy lên trên
+        gbc.gridy = row; gbc.weighty = 1.0;
+        pnlLeft.add(new JLabel(), gbc);
+
+        // -- Cột Phải: Tài khoản hệ thống --
+        JPanel pnlRight = new JPanel(new GridBagLayout());
+        pnlRight.setBackground(Color.WHITE);
+        pnlRight.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)), "Tài khoản hệ thống",
+            TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
+            new Font("Segoe UI", Font.BOLD, 14), headerColor));
+        
+        txtUser = createTextField();
+        txtPass = createTextField();
         cboQuyen = new JComboBox<>(new String[]{"Thủ Thư (Nhân viên)", "Admin (Quản trị)"});
+        cboQuyen.setPreferredSize(new Dimension(200, 35));
+        cboQuyen.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         
-        addComp(pnlRight, "Username:", txtUser);
-        addComp(pnlRight, "Password:", txtPass);
-        addComp(pnlRight, "Quyền:", cboQuyen);
+        if(nhanVienEdit != null) {
+            txtUser.setEditable(false);
+            txtUser.setBackground(new Color(245, 245, 245));
+        }
+
+        row = 0;
+        gbc.weighty = 0.0; // Reset weight
+        addComp(pnlRight, gbc, row++, "Username:", txtUser);
+        addComp(pnlRight, gbc, row++, "Password:", txtPass);
+        addComp(pnlRight, gbc, row++, "Quyền Hạn:", cboQuyen);
         
-        // Disable username nếu đang sửa (Khóa chính)
-        if(nhanVienEdit != null) txtUser.setEditable(false);
+        // Đẩy lên trên
+        gbc.gridy = row; gbc.weighty = 1.0;
+        pnlRight.add(new JLabel(), gbc);
 
         pnlContent.add(pnlLeft);
         pnlContent.add(pnlRight);
         add(pnlContent, BorderLayout.CENTER);
 
-        // Buttons
+        // --- 3. BUTTONS ---
         JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
-        JButton btnLuu = new JButton("Lưu");
-        btnLuu.setPreferredSize(new Dimension(120, 40));
-        btnLuu.setBackground(nhanVienEdit == null ? new Color(50, 115, 220) : new Color(255, 152, 0));
-        btnLuu.setForeground(Color.WHITE);
-        btnLuu.setFont(new Font("Segoe UI", Font.BOLD, 14));
-
-        JButton btnHuy = new JButton("Hủy");
-        btnHuy.setPreferredSize(new Dimension(100, 40));
+        pnlBot.setBackground(new Color(245, 248, 253));
+        
+        JButton btnLuu = createButton("Lưu Lại", headerColor);
+        JButton btnHuy = createButton("Hủy Bỏ", new Color(220, 53, 69));
 
         btnLuu.addActionListener(e -> xuLyLuu());
         btnHuy.addActionListener(e -> dispose());
@@ -100,31 +137,16 @@ public class GUI_DialogThuThu extends JDialog {
         pnlBot.add(btnLuu); pnlBot.add(btnHuy);
         add(pnlBot, BorderLayout.SOUTH);
 
-        // --- [NEW] Setup Enter Navigation ---
+        // Setup Enter
         setupEnterNavigation();
     }
 
-    // --- [NEW] Method to handle Enter key navigation ---
     private void setupEnterNavigation() {
-        // Helper to add Enter listener
-        ActionListener nextFocusAction = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ((JComponent)e.getSource()).transferFocus();
-            }
-        };
-
-        // Chain the fields: Ten -> DiaChi -> SDT -> User -> Pass -> Save
+        ActionListener nextFocusAction = e -> ((JComponent)e.getSource()).transferFocus();
         txtTen.addActionListener(nextFocusAction);
-        // Note: Spinners and ComboBoxes handle focus differently or naturally with Tab, 
-        // strictly for TextFields ActionListener works best for Enter.
-        // We can manually chain the TextFields that are likely to be typed in sequence.
-        
         txtDiaChi.addActionListener(nextFocusAction);
         txtSDT.addActionListener(nextFocusAction);
         txtUser.addActionListener(nextFocusAction);
-        
-        // For the last field (Password), Enter can trigger the Save action
         txtPass.addActionListener(e -> xuLyLuu());
     }
 
@@ -143,7 +165,7 @@ public class GUI_DialogThuThu extends JDialog {
         
         tt.setTenDangNhap(txtUser.getText());
         tt.setMatKhau(txtPass.getText());
-        tt.setPhanQuyen(cboQuyen.getSelectedIndex() == 1 ? 1 : 2); // 1:Admin, 2:NV
+        tt.setPhanQuyen(cboQuyen.getSelectedIndex() == 1 ? 1 : 2); 
 
         boolean kq;
         if(nhanVienEdit == null) kq = dal.add(tt);
@@ -170,5 +192,35 @@ public class GUI_DialogThuThu extends JDialog {
     }
 
     private void genMa() { txtMa.setText("TT" + System.currentTimeMillis()%10000); }
-    private void addComp(JPanel p, String l, JComponent c) { p.add(new JLabel(l)); p.add(c); }
+    
+    // --- Helpers ---
+    private void addComp(JPanel p, GridBagConstraints gbc, int row, String lbl, JComponent comp) {
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        JLabel l = new JLabel(lbl);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        p.add(l, gbc);
+        
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        p.add(comp, gbc);
+    }
+    
+    private JTextField createTextField() {
+        JTextField t = new JTextField();
+        t.setPreferredSize(new Dimension(200, 35));
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        t.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200,200,200)),
+            BorderFactory.createEmptyBorder(5,5,5,5)
+        ));
+        return t;
+    }
+    
+    private JButton createButton(String text, Color bg) {
+        JButton b = new JButton(text);
+        b.setPreferredSize(new Dimension(120, 40));
+        b.setBackground(bg); b.setForeground(Color.WHITE);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        b.setFocusPainted(false); b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return b;
+    }
 }

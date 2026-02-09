@@ -2,6 +2,7 @@ package SACH;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 
 public class GUI_DialogChiTietSach extends JDialog {
@@ -10,6 +11,8 @@ public class GUI_DialogChiTietSach extends JDialog {
     private DAL_Sach dal = new DAL_Sach();
     private JLabel lblAnh;
     private JPanel pnlInfo;
+    
+    private Color mainColor = new Color(50, 115, 220); 
 
     public GUI_DialogChiTietSach(Window parent, String maSach) {
         super(parent, ModalityType.APPLICATION_MODAL);
@@ -19,32 +22,79 @@ public class GUI_DialogChiTietSach extends JDialog {
     }
 
     private void initUI() {
-        setTitle("CHI TIẾT SÁCH");
-        setSize(800, 500);
+        setTitle("THÔNG TIN CHI TIẾT SÁCH");
+        setSize(900, 650); // Tăng kích thước form lên xíu cho thoáng
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+        setResizable(false);
 
-        // --- BÊN TRÁI: ẢNH ---
+        // --- 1. HEADER ---
+        JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        pnlHeader.setBackground(mainColor);
+        pnlHeader.setBorder(new EmptyBorder(10, 0, 10, 0));
+        
+        JLabel lblHeader = new JLabel("CHI TIẾT SÁCH");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblHeader.setForeground(Color.WHITE);
+        pnlHeader.add(lblHeader);
+        add(pnlHeader, BorderLayout.NORTH);
+
+        // --- 2. CONTENT ---
+        JPanel pnlContent = new JPanel(new BorderLayout(15, 15));
+        pnlContent.setBorder(new EmptyBorder(20, 20, 20, 20));
+        pnlContent.setBackground(Color.WHITE);
+
+        // A. PANEL ẢNH (TRÁI)
         JPanel pnlLeft = new JPanel(new BorderLayout());
         pnlLeft.setBackground(Color.WHITE);
-        pnlLeft.setPreferredSize(new Dimension(300, 0));
-        pnlLeft.setBorder(new EmptyBorder(20, 20, 20, 20));
+        pnlLeft.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            "Ảnh bìa",
+            TitledBorder.CENTER, TitledBorder.TOP,
+            new Font("Segoe UI", Font.BOLD, 14), mainColor
+        ));
+        pnlLeft.setPreferredSize(new Dimension(300, 0)); // Rộng hơn xíu để chứa ảnh to
         
         lblAnh = new JLabel("Không có ảnh", SwingConstants.CENTER);
-        lblAnh.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        lblAnh.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        lblAnh.setForeground(Color.GRAY);
         pnlLeft.add(lblAnh, BorderLayout.CENTER);
 
-        // --- BÊN PHẢI: THÔNG TIN (NỀN XANH) ---
+        // B. PANEL THÔNG TIN (PHẢI)
         pnlInfo = new JPanel(new GridBagLayout());
-        pnlInfo.setBackground(new Color(100, 149, 237)); // Màu xanh dịu (Cornflower Blue)
-        pnlInfo.setBorder(new EmptyBorder(20, 20, 20, 20));
+        pnlInfo.setBackground(Color.WHITE);
+        pnlInfo.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            "Thông tin chung",
+            TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.TOP,
+            new Font("Segoe UI", Font.BOLD, 14), mainColor
+        ));
 
-        // Container chính
-        add(pnlLeft, BorderLayout.WEST);
-        add(pnlInfo, BorderLayout.CENTER);
+        pnlContent.add(pnlLeft, BorderLayout.WEST);
+        pnlContent.add(pnlInfo, BorderLayout.CENTER);
+        add(pnlContent, BorderLayout.CENTER);
+
+        // --- 3. FOOTER ---
+        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pnlFooter.setBackground(new Color(245, 248, 253));
+        pnlFooter.setBorder(new EmptyBorder(10, 20, 10, 20));
+        
+        JButton btnDong = new JButton("Đóng");
+        btnDong.setPreferredSize(new Dimension(120, 40));
+        btnDong.setBackground(new Color(220, 53, 69));
+        btnDong.setForeground(Color.WHITE);
+        btnDong.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnDong.setFocusPainted(false);
+        btnDong.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnDong.addActionListener(e -> dispose());
+        
+        pnlFooter.add(btnDong);
+        add(pnlFooter, BorderLayout.SOUTH);
     }
 
     private void loadData() {
+        pnlInfo.removeAll(); // Xóa cũ để vẽ lại cho chắc
+        
         DTO_Sach s = dal.getDetail(maSach);
         if(s == null) return;
 
@@ -60,59 +110,81 @@ public class GUI_DialogChiTietSach extends JDialog {
             }
         }
 
-        // Load thông tin
+        // Setup Layout
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 10, 8, 10);
         
-        addRow(0, "Mã sách:", s.getMaCuonSach(), gbc);
-        addRow(1, "Tên sách:", s.getTenSach(), gbc);
-        addRow(2, "Tác giả:", s.getTacGia(), gbc);
-        addRow(3, "Giá:", String.format("%,.0f VNĐ", s.getGia()), gbc);
-        addRow(4, "Thể loại:", s.getTenTheLoai() != null ? s.getTenTheLoai() : s.getMaTheLoai(), gbc);
-        addRow(5, "Năm XB:", String.valueOf(s.getNamXuatBan()), gbc);
-        addRow(6, "Nhà XB:", s.getNhaXuatBan(), gbc);
-        addRow(7, "Số lượng:", s.getSoLuong() + "", gbc);
-        addRow(8, "Trạng thái:", s.getTinhTrang(), gbc);
+        // Các dòng thông tin cơ bản
+        addRow(0, "Mã Sách:", s.getMaCuonSach(), gbc);
+        addRow(1, "Tên Sách:", s.getTenSach(), gbc);
+        addRow(2, "Tác Giả:", s.getTacGia(), gbc);
+        addRow(3, "Nhà Xuất Bản:", s.getNhaXuatBan(), gbc);
+        addRow(4, "Năm Xuất Bản:", String.valueOf(s.getNamXuatBan()), gbc);
+        addRow(5, "Thể Loại:", s.getTenTheLoai() != null ? s.getTenTheLoai() : s.getMaTheLoai(), gbc);
+        addRow(6, "Giá Bìa:", String.format("%,.0f VNĐ", s.getGia()), gbc);
+        addRow(7, "Số Lượng Tồn:", s.getSoLuong() + " cuốn", gbc);
         
-        // Mô tả (TextArea)
-        gbc.gridx = 0; gbc.gridy = 9;
-        JLabel lblMoTa = new JLabel("Mô tả:");
-        lblMoTa.setForeground(Color.WHITE);
-        lblMoTa.setFont(new Font("Segoe UI", Font.BOLD, 14)); // Tiêu đề vẫn in đậm
+        // --- PHẦN MÔ TẢ (Quan trọng) ---
+        gbc.gridx = 0; gbc.gridy = 8; 
+        gbc.weightx = 0; gbc.weighty = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Reset fill
+        
+        JLabel lblMoTa = new JLabel("Mô Tả:");
+        lblMoTa.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblMoTa.setForeground(new Color(100, 100, 100));
         pnlInfo.add(lblMoTa, gbc);
         
-        gbc.gridx = 1; gbc.gridy = 9; gbc.weighty = 1.0; gbc.fill = GridBagConstraints.BOTH;
-        JTextArea txtMoTa = new JTextArea(s.getMoTa());
+        gbc.gridx = 1; 
+        gbc.weightx = 1.0; 
+        gbc.weighty = 1.0; // Giãn chiều cao
+        gbc.fill = GridBagConstraints.BOTH; // Lấp đầy cả 2 chiều
+        
+        // Xử lý null cho mô tả
+        String moTaText = (s.getMoTa() == null || s.getMoTa().equals("null")) ? "Không có mô tả." : s.getMoTa();
+        
+        JTextArea txtMoTa = new JTextArea(moTaText);
         txtMoTa.setWrapStyleWord(true);
         txtMoTa.setLineWrap(true);
         txtMoTa.setEditable(false);
-        txtMoTa.setFont(new Font("Segoe UI", Font.PLAIN, 14)); // Nội dung mô tả font thường
-        pnlInfo.add(new JScrollPane(txtMoTa), gbc);
+        txtMoTa.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtMoTa.setBackground(new Color(250, 250, 250));
+        txtMoTa.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        JScrollPane sc = new JScrollPane(txtMoTa);
+        sc.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        sc.setPreferredSize(new Dimension(100, 100)); // [FIX] Đảm bảo luôn có chiều cao tối thiểu
+        
+        pnlInfo.add(sc, gbc);
+        
+        pnlInfo.revalidate(); // Vẽ lại giao diện
+        pnlInfo.repaint();
     }
 
-    private void addRow(int row, String label, String value, GridBagConstraints gbc) {
-        // Cột 1: Label (Tiêu đề) - Giữ in đậm
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.weighty = 0;
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14)); 
-        lbl.setForeground(Color.WHITE);
+    private void addRow(int row, String labelText, String valueText, GridBagConstraints gbc) {
+        gbc.gridx = 0; gbc.gridy = row; 
+        gbc.weightx = 0; gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(new Color(100, 100, 100));
         pnlInfo.add(lbl, gbc);
 
-        // Cột 2: Value (Nội dung) - CHUYỂN VỀ FONT THƯỜNG
-        gbc.gridx = 1; gbc.weightx = 1.0;
-        JTextField txt = new JTextField(value);
+        gbc.gridx = 1; 
+        gbc.weightx = 1.0;
         
-        // --- [SỬA LẠI]: Dùng Font.PLAIN thay vì Font.BOLD ---
-        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14)); 
-        
+        JTextField txt = new JTextField(valueText);
+        txt.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txt.setForeground(new Color(50, 50, 50));
         txt.setEditable(false);
         txt.setBackground(Color.WHITE);
-        // Thêm padding cho Textfield nhìn thoáng hơn
         txt.setBorder(BorderFactory.createCompoundBorder(
-            txt.getBorder(), 
-            BorderFactory.createEmptyBorder(2, 5, 2, 5)));
-            
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)),
+            new EmptyBorder(0, 0, 5, 0)
+        ));
+        
         pnlInfo.add(txt, gbc);
     }
 }

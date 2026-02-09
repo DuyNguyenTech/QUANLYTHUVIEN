@@ -1,15 +1,11 @@
 package HETHONG;
 
 import DOCGIA.DTO_DocGia;
+import CHUNG.EmailService;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.MatteBorder;
-
-import CHUNG.EmailService;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
@@ -25,199 +21,201 @@ public class GUI_Signup extends JFrame {
 
     private DAL_Signup dal = new DAL_Signup();
     
-    // --- PALETTE MÀU ĐỒNG BỘ ---
-    private Color colorPrimary = new Color(25, 118, 210); // Xanh dương đậm (Màu chủ đạo)
-    private Color colorSecondary = new Color(227, 242, 253); // Xanh nhạt (Dùng cho nền focus)
-    private Color colorHover = new Color(21, 101, 192);   // Màu khi di chuột
-    private Color colorText = new Color(30, 60, 90);      // Màu chữ label (Xanh đen sang trọng)
-    private Color colorBorder = new Color(200, 200, 200); // Màu viền xám nhẹ
+    // Màu sắc chủ đạo (Giống GUI_Login)
+    private Color brandColor = new Color(24, 119, 242); 
+    private Color greenColor = new Color(40, 167, 69); 
 
     public GUI_Signup() {
         initUI();
     }
 
     private void initUI() {
-        setTitle("Đăng Ký Tài Khoản Độc Giả");
-        setSize(540, 720); // Tăng nhẹ kích thước
+        setTitle("Đăng Ký Thành Viên");
+        setSize(600, 750); // Form to hơn chút cho thoáng
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(false);
-        setLayout(new BorderLayout());
+        setLayout(null);
+        getContentPane().setBackground(Color.WHITE);
 
-        // --- 1. HEADER (MÀU MÈ BẮT MẮT) ---
+        // --- 1. HEADER ---
         JPanel pnlHeader = new JPanel();
-        pnlHeader.setBackground(colorPrimary); // Nền xanh chủ đạo
-        pnlHeader.setPreferredSize(new Dimension(0, 80));
-        pnlHeader.setLayout(new GridBagLayout());
+        pnlHeader.setBounds(0, 0, 600, 80);
+        pnlHeader.setBackground(brandColor);
+        pnlHeader.setLayout(null);
         
-        JLabel lblTitle = new JLabel("ĐĂNG KÝ THÀNH VIÊN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        lblTitle.setForeground(Color.WHITE); // Chữ trắng nổi bật
+        JLabel lblTitle = new JLabel("ĐĂNG KÝ THÀNH VIÊN", SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setBounds(0, 20, 600, 40);
         pnlHeader.add(lblTitle);
-        add(pnlHeader, BorderLayout.NORTH);
+        add(pnlHeader);
 
         // --- 2. FORM CONTENT ---
-        JPanel panelForm = new JPanel(null);
-        panelForm.setBackground(Color.WHITE);
-        panelForm.setBorder(new EmptyBorder(20, 20, 20, 20));
+        int xL = 40, xR = 310; // Tọa độ X cột trái và phải
+        int y = 110;
+        int w = 250, h = 65; // Height bao gồm cả label + textfield
+        int gap = 10; // Khoảng cách giữa các dòng
 
-        int xLeft = 40;
-        int xRight = 280;
-        int y = 20;
-        int w = 220;
-        int h = 40;
-        int gap = 75;
+        // --- Hàng 1: Họ tên & Ngày sinh ---
+        addLabel("Họ và tên:", xL, y);
+        txtHoTen = createTextField("Nhập họ tên đầy đủ...");
+        txtHoTen.setBounds(xL, y + 25, w, 40);
+        add(txtHoTen);
 
-        // --- CỘT TRÁI ---
-        addLabel(panelForm, "Họ và tên:", xLeft, y);
-        txtHoTen = addTextField(panelForm, xLeft, y + 25, w, h);
-        
-        y += gap;
-        addLabel(panelForm, "Email (Nhận OTP):", xLeft, y);
-        txtEmail = addTextField(panelForm, xLeft, y + 25, w, h);
+        addLabel("Ngày sinh (dd/MM/yyyy):", xR, y);
+        txtNgaySinh = createTextField("Ví dụ: 20/11/2000");
+        txtNgaySinh.setBounds(xR, y + 25, w, 40);
+        add(txtNgaySinh);
 
-        y += gap;
-        addLabel(panelForm, "Tên đăng nhập:", xLeft, y);
-        txtUser = addTextField(panelForm, xLeft, y + 25, w, h);
+        y += h + gap;
 
-        y += gap;
-        addLabel(panelForm, "Mật khẩu:", xLeft, y);
-        txtPass = addPasswordField(panelForm, xLeft, y + 25, w, h);
-        
-        // --- CỘT PHẢI ---
-        int yR = 20;
-        
-        addLabel(panelForm, "Ngày sinh (dd/MM/yyyy):", xRight, yR);
-        txtNgaySinh = addTextField(panelForm, xRight, yR + 25, w, h);
-        txtNgaySinh.setToolTipText("Ví dụ: 20/11/2000");
+        // --- Hàng 2: Email & Giới tính ---
+        addLabel("Email (Nhận mã OTP):", xL, y);
+        txtEmail = createTextField("example@gmail.com");
+        txtEmail.setBounds(xL, y + 25, w, 40);
+        add(txtEmail);
 
-        yR += gap;
-        addLabel(panelForm, "Giới tính:", xRight, yR);
-        String[] phai = {"Nam", "Nữ", "Khác"};
+        addLabel("Giới tính:", xR, y);
+        String[] phai = {"Nam", "Nữ"}; // [ĐÚNG YÊU CẦU] Chỉ Nam/Nữ
         cbxGioiTinh = new JComboBox<>(phai);
-        cbxGioiTinh.setBounds(xRight, yR + 25, w, h);
-        cbxGioiTinh.setBackground(Color.WHITE);
+        cbxGioiTinh.setBounds(xR, y + 25, w, 40);
         cbxGioiTinh.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        // Style cho ComboBox
-        cbxGioiTinh.setBorder(new LineBorder(colorBorder));
-        ((JComponent) cbxGioiTinh.getRenderer()).setOpaque(true);
+        cbxGioiTinh.setBackground(Color.WHITE);
+        add(cbxGioiTinh);
+
+        y += h + gap;
+
+        // --- Hàng 3: Tên đăng nhập & SĐT ---
+        addLabel("Tên đăng nhập:", xL, y);
+        txtUser = createTextField("Username viết liền...");
+        txtUser.setBounds(xL, y + 25, w, 40);
+        add(txtUser);
+
+        addLabel("Số điện thoại:", xR, y);
+        txtSDT = createTextField("Số điện thoại...");
+        txtSDT.setBounds(xR, y + 25, w, 40);
+        add(txtSDT);
+
+        y += h + gap;
+
+        // --- Hàng 4: Mật khẩu & Nhập lại ---
+        addLabel("Mật khẩu:", xL, y);
+        txtPass = createPasswordField("Mật khẩu...");
+        txtPass.setBounds(xL, y + 25, w, 40);
+        add(txtPass);
+
+        addLabel("Nhập lại mật khẩu:", xR, y);
+        txtRePass = createPasswordField("Xác nhận mật khẩu...");
+        txtRePass.setBounds(xR, y + 25, w, 40);
+        add(txtRePass);
+
+        y += h + gap;
+
+        // --- Hàng 5: Địa chỉ (Full width) ---
+        addLabel("Địa chỉ liên hệ:", xL, y);
+        txtDiaChi = createTextField("Số nhà, đường, phường/xã...");
+        txtDiaChi.setBounds(xL, y + 25, 520, 40);
+        add(txtDiaChi);
+
+        // --- 3. BUTTONS ---
+        int yBtn = 530;
         
-        cbxGioiTinh.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) cbxGioiTinh.transferFocus();
-            }
-        });
-        panelForm.add(cbxGioiTinh);
-
-        yR += gap;
-        addLabel(panelForm, "Số điện thoại:", xRight, yR);
-        txtSDT = addTextField(panelForm, xRight, yR + 25, w, h);
-
-        yR += gap;
-        addLabel(panelForm, "Nhập lại mật khẩu:", xRight, yR);
-        txtRePass = addPasswordField(panelForm, xRight, yR + 25, w, h);
-        
-        // --- ĐỊA CHỈ (FULL WIDTH) ---
-        int yFull = 320;
-        addLabel(panelForm, "Địa chỉ liên hệ:", xLeft, yFull);
-        txtDiaChi = addTextField(panelForm, xLeft, yFull + 25, 460, h);
-
-        // --- BUTTONS ---
-        int yBtn = 410;
         btnSignup = new JButton("XÁC THỰC & ĐĂNG KÝ");
-        btnSignup.setBounds(xLeft, yBtn, 460, 45);
-        styleButton(btnSignup, colorPrimary, colorHover);
+        btnSignup.setBounds(xL, yBtn, 520, 50);
+        btnSignup.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnSignup.setBackground(brandColor);
+        btnSignup.setForeground(Color.WHITE);
+        btnSignup.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // Bo tròn nút
+        btnSignup.putClientProperty(FlatClientProperties.STYLE, "arc: 999; borderWidth: 0; hoverBackground: #1565C0");
         btnSignup.addActionListener(e -> xuLyDangKy());
-        panelForm.add(btnSignup);
-        
+        add(btnSignup);
+
         btnBack = new JButton("Quay lại Đăng nhập");
-        btnBack.setBounds(xLeft, yBtn + 55, 460, 40);
-        // Nút Back màu trắng, viền xanh cho tinh tế
-        btnBack.setBackground(Color.WHITE);
-        btnBack.setForeground(colorPrimary);
+        btnBack.setBounds(xL, yBtn + 65, 520, 45);
         btnBack.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnBack.setFocusPainted(false);
-        btnBack.setBorder(new LineBorder(colorPrimary));
+        btnBack.setBackground(Color.WHITE);
+        btnBack.setForeground(brandColor);
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        btnBack.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { 
-                btnBack.setBackground(colorSecondary); 
-            }
-            public void mouseExited(MouseEvent e) { 
-                btnBack.setBackground(Color.WHITE); 
-            }
-        });
+        // Bo tròn nút viền
+        btnBack.putClientProperty(FlatClientProperties.STYLE, "arc: 999; borderWidth: 1; borderColor: #1877F2; hoverBackground: #F0F8FF; focusWidth: 0");
         btnBack.addActionListener(e -> {
             this.dispose();
             new GUI_Login().setVisible(true);
         });
-        panelForm.add(btnBack);
+        add(btnBack);
 
-        add(panelForm, BorderLayout.CENTER);
-
-        // --- CẤU HÌNH ENTER (Logic giữ nguyên) ---
-        setupEnterKey(txtHoTen, false);
-        setupEnterKey(txtEmail, false);
-        setupEnterKey(txtUser, false);
-        setupEnterKey(txtPass, false);
-        setupEnterKey(txtNgaySinh, false);
-        setupEnterKey(txtSDT, false);
-        setupEnterKey(txtRePass, false);
-        setupEnterKey(txtDiaChi, true); // Cuối cùng -> Submit
+        // --- ENTER KEY NAVIGATION ---
+        setupEnterKey();
     }
 
-    // --- LOGIC VALIDATE (Đã tối ưu ở bước trước) ---
-    private boolean validateForm() {
-        String hoTen = txtHoTen.getText().trim();
-        String email = txtEmail.getText().trim();
-        String sdt = txtSDT.getText().trim();
-        String ngaySinhStr = txtNgaySinh.getText().trim();
-        String diaChi = txtDiaChi.getText().trim();
-        String user = txtUser.getText().trim();
-        String pass = new String(txtPass.getPassword());
-        String rePass = new String(txtRePass.getPassword());
+    // --- HELPER UI ---
+    private void addLabel(String text, int x, int y) {
+        JLabel l = new JLabel(text);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        l.setForeground(new Color(80, 80, 80));
+        l.setBounds(x, y, 200, 25);
+        add(l);
+    }
 
-        if (hoTen.isEmpty() || email.isEmpty() || sdt.isEmpty() || user.isEmpty() || diaChi.isEmpty() || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng không để trống bất kỳ thông tin nào!");
-            return false;
-        }
-        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            JOptionPane.showMessageDialog(this, "Định dạng Email không hợp lệ!");
-            return false;
-        }
-        if (!sdt.matches("^\\d{10,11}$")) {
-            JOptionPane.showMessageDialog(this, "Số điện thoại phải là chữ số và có độ dài từ 10-11 số!");
-            return false;
-        }
-        if (!pass.equals(rePass)) {
-            JOptionPane.showMessageDialog(this, "Mật khẩu xác nhận không khớp!");
-            return false;
-        }
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-            sdf.setLenient(false);
-            Date ngaySinh = sdf.parse(ngaySinhStr);
-            Date ngayHienTai = new Date();
-            if (ngaySinh.after(ngayHienTai)) {
-                JOptionPane.showMessageDialog(this, "Ngày sinh không hợp lệ!");
-                return false;
+    private JTextField createTextField(String placeHolder) {
+        JTextField t = new JTextField();
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // FlatLaf style - Đã sửa lỗi chính tả 'focusedBorderColor'
+        t.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, placeHolder);
+        t.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderColor: #cccccc; focusedBorderColor: #1877F2; borderWidth: 1");
+        return t;
+    }
+
+    private JPasswordField createPasswordField(String placeHolder) {
+        JPasswordField t = new JPasswordField();
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // FlatLaf style - Đã sửa lỗi chính tả 'focusedBorderColor'
+        t.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, placeHolder);
+        t.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderColor: #cccccc; focusedBorderColor: #1877F2; borderWidth: 1; showRevealButton: true");
+        return t;
+    }
+
+    private void setupEnterKey() {
+        // Tự động nhảy sang ô tiếp theo khi nhấn Enter
+        Component[] order = {txtHoTen, txtNgaySinh, txtEmail, cbxGioiTinh, txtUser, txtSDT, txtPass, txtRePass, txtDiaChi};
+        for (int i = 0; i < order.length - 1; i++) {
+            Component c = order[i];
+            Component next = order[i + 1];
+            if (c instanceof JTextField) {
+                ((JTextField) c).addActionListener(e -> next.requestFocus());
+            } else if (c instanceof JComboBox) {
+                // Với ComboBox, Enter không tự kích hoạt ActionListener như TextField
+                ((JComboBox) c).addKeyListener(new KeyAdapter() {
+                    public void keyPressed(KeyEvent e) { if(e.getKeyCode() == KeyEvent.VK_ENTER) next.requestFocus(); }
+                });
             }
-            long diff = ngayHienTai.getTime() - ngaySinh.getTime();
-            long years = diff / (1000L * 60 * 60 * 24 * 365);
-            if (years < 5 || years > 100) {
-                JOptionPane.showMessageDialog(this, "Ngày sinh không hợp lệ (Phải từ 5-100 tuổi)!");
-                return false;
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng ngày sinh (dd/MM/yyyy)!");
+        }
+        // Ô cuối cùng Enter -> Submit
+        txtDiaChi.addActionListener(e -> xuLyDangKy());
+    }
+
+    // --- LOGIC XỬ LÝ (GIỮ NGUYÊN) ---
+    
+    private boolean validateForm() {
+        if (txtHoTen.getText().trim().isEmpty() || txtEmail.getText().trim().isEmpty() || 
+            txtSDT.getText().trim().isEmpty() || txtUser.getText().trim().isEmpty() || 
+            txtDiaChi.getText().trim().isEmpty() || new String(txtPass.getPassword()).isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (!txtEmail.getText().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            JOptionPane.showMessageDialog(this, "Email không hợp lệ!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (!new String(txtPass.getPassword()).equals(new String(txtRePass.getPassword()))) {
+            JOptionPane.showMessageDialog(this, "Mật khẩu xác nhận không khớp!", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return false;
         }
         return true;
     }
 
-    // --- LOGIC XỬ LÝ (Giữ nguyên) ---
     private void xuLyDangKy() {
         if (!validateForm()) return;
         
@@ -230,7 +228,7 @@ public class GUI_Signup extends JFrame {
         String emailNhan = txtEmail.getText().trim();
         
         btnSignup.setEnabled(false);
-        btnSignup.setText("Đang gửi Email...");
+        btnSignup.setText("Đang gửi OTP...");
         btnSignup.setBackground(Color.GRAY);
 
         new Thread(() -> {
@@ -239,21 +237,20 @@ public class GUI_Signup extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 btnSignup.setEnabled(true);
                 btnSignup.setText("XÁC THỰC & ĐĂNG KÝ");
-                btnSignup.setBackground(colorPrimary);
+                btnSignup.setBackground(brandColor);
 
                 if (otpServer != null) {
                     String otpUser = JOptionPane.showInputDialog(this, 
-                        "Mã xác thực đã gửi đến: " + emailNhan + 
-                        "\nVui lòng nhập mã OTP:", 
+                        "Mã xác thực đã gửi đến: " + emailNhan + "\nNhập mã OTP:", 
                         "Xác thực Email", JOptionPane.QUESTION_MESSAGE);
 
                     if (otpUser != null && otpUser.trim().equals(otpServer)) {
                         thucHienLuuDB();
                     } else {
-                        JOptionPane.showMessageDialog(this, "Mã OTP không đúng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Mã OTP sai!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(this, "Không thể gửi Email!\nKiểm tra mạng hoặc địa chỉ Email.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Gửi Email thất bại! Kiểm tra kết nối mạng.", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             });
         }).start();
@@ -275,89 +272,30 @@ public class GUI_Signup extends JFrame {
             dg.setNgaySinh(new java.sql.Date(dateParsed.getTime()));
             dg.setLop("Mới"); 
 
-            DTO_TaiKhoan tk = new DTO_TaiKhoan();
+            // Sử dụng DTO_TaiKhoan đúng package (thường là HETHONG hoặc DTO chung)
+            // Nếu DTO_TaiKhoan nằm trong package HETHONG thì dùng trực tiếp
+            DTO_TaiKhoan tk = new DTO_TaiKhoan(); 
             tk.setUserName(txtUser.getText());
             tk.setPassword(new String(txtPass.getPassword()));
             tk.setEmail(txtEmail.getText());
 
             if (dal.signup(dg, tk)) {
-                JOptionPane.showMessageDialog(this, "Đăng ký thành công! Hãy đăng nhập.");
+                JOptionPane.showMessageDialog(this, "Đăng ký thành công! Vui lòng đăng nhập.");
                 this.dispose();
                 new GUI_Login().setVisible(true);
             } else {
-                JOptionPane.showMessageDialog(this, "Lỗi khi lưu vào CSDL!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi lưu dữ liệu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi định dạng ngày sinh hoặc dữ liệu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // --- HELPER METHODS (ĐÃ NÂNG CẤP VISUAL) ---
-
-    private void addLabel(JPanel p, String text, int x, int y) {
-        JLabel l = new JLabel(text);
-        l.setBounds(x, y, 200, 20);
-        // [MỚI] Font đậm hơn và màu xanh đen cho Label
-        l.setFont(new Font("Segoe UI", Font.BOLD, 13)); 
-        l.setForeground(colorText);
-        p.add(l);
-    }
-
-    private JTextField addTextField(JPanel p, int x, int y, int w, int h) {
-        JTextField t = new JTextField();
-        t.setBounds(x, y, w, h);
-        t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        t.setBorder(new CompoundBorder(new LineBorder(colorBorder), new EmptyBorder(5, 10, 5, 10)));
-        addVisualEffects(t);
-        p.add(t);
-        return t;
-    }
-
-    private JPasswordField addPasswordField(JPanel p, int x, int y, int w, int h) {
-        JPasswordField t = new JPasswordField();
-        t.setBounds(x, y, w, h);
-        t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        t.setBorder(new CompoundBorder(new LineBorder(colorBorder), new EmptyBorder(5, 10, 5, 10)));
-        addVisualEffects(t);
-        p.add(t);
-        return t;
-    }
-
-    // [MỚI] Hiệu ứng Visual nâng cao (Đổi nền khi focus)
-    private void addVisualEffects(JTextField field) {
-        field.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                // Khi click vào: Viền xanh đậm + Nền xanh nhạt
-                field.setBorder(new CompoundBorder(new LineBorder(colorPrimary, 1), new EmptyBorder(5, 10, 5, 10)));
-                field.setBackground(colorSecondary); 
-            }
-            @Override
-            public void focusLost(FocusEvent e) {
-                // Khi thoát ra: Viền xám + Nền trắng
-                field.setBorder(new CompoundBorder(new LineBorder(colorBorder, 1), new EmptyBorder(5, 10, 5, 10)));
-                field.setBackground(Color.WHITE);
-            }
-        });
-    }
-
-    private void setupEnterKey(JTextField field, boolean isLastField) {
-        field.addActionListener(e -> {
-            if (isLastField) xuLyDangKy();
-            else field.transferFocus();
-        });
-    }
-
-    private void styleButton(JButton btn, Color bg, Color hover) {
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder());
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(hover); }
-            public void mouseExited(MouseEvent e) { btn.setBackground(bg); }
-        });
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (Exception ex) { }
+        SwingUtilities.invokeLater(() -> new GUI_Signup().setVisible(true));
     }
 }

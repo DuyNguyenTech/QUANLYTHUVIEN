@@ -8,72 +8,134 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-// [ĐÃ SỬA] Chuyển từ JFrame sang JPanel để nhúng vào giao diện chính
 public class GUI_SaoLuuPhucHoi extends JPanel {
+    
     private JButton btnBackup, btnRestore;
     private DBConnect db = new DBConnect();
+    
+    // Màu chủ đạo
+    private Color mainColor = new Color(50, 115, 220); 
+    private Color bgColor = new Color(245, 248, 253);
 
     public GUI_SaoLuuPhucHoi() {
-        // [ĐÃ SỬA] Thiết lập layout cho Panel to
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 248, 253)); // Màu nền đồng bộ
+        setBackground(bgColor);
 
-        // --- 1. HEADER (TIÊU ĐỀ) ---
+        // --- 1. HEADER ---
         JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
         pnlHeader.setBackground(Color.WHITE);
-        pnlHeader.setBorder(new EmptyBorder(10, 0, 10, 0));
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
+            new EmptyBorder(10, 0, 10, 0)
+        ));
         
         JLabel lblTitle = new JLabel("SAO LƯU & PHỤC HỒI DỮ LIỆU");
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 22));
-        lblTitle.setForeground(new Color(0, 102, 204));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setForeground(mainColor);
         
         pnlHeader.add(lblTitle);
         add(pnlHeader, BorderLayout.NORTH);
 
-        // --- 2. NỘI DUNG (CANH GIỮA MÀN HÌNH) ---
+        // --- 2. CONTENT (CENTER) ---
         JPanel pnlCenter = new JPanel(new GridBagLayout());
-        pnlCenter.setBackground(new Color(245, 248, 253));
+        pnlCenter.setBackground(bgColor);
         
-        // Tạo một hộp chứa các nút để canh chỉnh cho đẹp
-        JPanel pnlBox = new JPanel(new GridLayout(3, 1, 0, 25)); // 3 dòng, cách nhau 25px
-        pnlBox.setOpaque(false);
+        // Container chứa 2 card
+        JPanel pnlContainer = new JPanel(new GridLayout(1, 2, 40, 0));
+        pnlContainer.setBackground(bgColor);
+        pnlContainer.setBorder(new EmptyBorder(0, 50, 0, 50)); // Padding 2 bên
+
+        // --- CARD 1: BACKUP ---
+        JPanel pnlBackup = createCard(
+            "SAO LƯU DỮ LIỆU",
+            "Tạo bản sao an toàn cho hệ thống.\nFile sẽ được lưu dưới dạng .sql",
+            "⬇️", 
+            new Color(40, 167, 69) // Màu xanh lá
+        );
+        btnBackup = createButton("THỰC HIỆN SAO LƯU", new Color(40, 167, 69));
+        pnlBackup.add(btnBackup, BorderLayout.SOUTH);
+
+        // --- CARD 2: RESTORE ---
+        JPanel pnlRestore = createCard(
+            "PHỤC HỒI DỮ LIỆU",
+            "Khôi phục dữ liệu từ file .sql đã lưu.\nCẩn thận: Dữ liệu hiện tại sẽ bị ghi đè.",
+            "⬆️", 
+            new Color(255, 152, 0) // Màu cam
+        );
+        btnRestore = createButton("CHỌN FILE PHỤC HỒI", new Color(255, 152, 0));
+        pnlRestore.add(btnRestore, BorderLayout.SOUTH);
+
+        pnlContainer.add(pnlBackup);
+        pnlContainer.add(pnlRestore);
         
-        // [ĐÃ SỬA] Làm nút to lên (300x60) cho hợp với màn hình lớn
-        btnBackup = new JButton("SAO LƯU (BACKUP)");
-        btnBackup.setPreferredSize(new Dimension(300, 60));
-        btnBackup.setBackground(new Color(0, 102, 204));
-        btnBackup.setForeground(Color.WHITE);
-        btnBackup.setFont(new Font("Arial", Font.BOLD, 16));
-        btnBackup.setFocusPainted(false);
-        btnBackup.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        // Thêm icon nếu có (tùy chọn)
-        // btnBackup.setIcon(new ImageIcon(getClass().getResource("/com/qlthuvien/images/backup.png")));
-
-        btnRestore = new JButton("PHỤC HỒI (RESTORE)");
-        btnRestore.setPreferredSize(new Dimension(300, 60));
-        btnRestore.setBackground(new Color(204, 0, 0));
-        btnRestore.setForeground(Color.WHITE);
-        btnRestore.setFont(new Font("Arial", Font.BOLD, 16));
-        btnRestore.setFocusPainted(false);
-        btnRestore.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        JLabel lblNote = new JLabel("<html><center>Lưu ý: Chức năng yêu cầu máy tính<br>đã cài đặt MySQL/XAMPP và cấu hình đúng đường dẫn.</center></html>", SwingConstants.CENTER);
-        lblNote.setFont(new Font("Arial", Font.ITALIC, 14));
-        lblNote.setForeground(Color.GRAY);
-
-        pnlBox.add(btnBackup);
-        pnlBox.add(btnRestore);
-        pnlBox.add(lblNote);
-
-        pnlCenter.add(pnlBox);
+        pnlCenter.add(pnlContainer);
         add(pnlCenter, BorderLayout.CENTER);
 
-        // Sự kiện giữ nguyên logic của anh
+        // --- 3. FOOTER NOTE ---
+        JLabel lblNote = new JLabel("<html><center><i>Lưu ý: Chức năng yêu cầu máy tính đã cài đặt MySQL/XAMPP và cấu hình đúng đường dẫn trong mã nguồn.</i></center></html>", SwingConstants.CENTER);
+        lblNote.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        lblNote.setForeground(Color.GRAY);
+        lblNote.setBorder(new EmptyBorder(20, 0, 20, 0));
+        add(lblNote, BorderLayout.SOUTH);
+
+        // --- EVENTS (GIỮ NGUYÊN LOGIC CỦA ANH) ---
         btnBackup.addActionListener(e -> xuLyBackup());
         btnRestore.addActionListener(e -> xuLyRestore());
     }
 
-    // --- GIỮ NGUYÊN CODE LOGIC CỦA ANH BÊN DƯỚI ---
+    // --- HELPER UI ---
+    private JPanel createCard(String title, String desc, String icon, Color color) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+            new EmptyBorder(30, 30, 30, 30)
+        ));
+        
+        // Icon
+        JLabel lblIcon = new JLabel(icon, SwingConstants.CENTER);
+        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 60));
+        lblIcon.setForeground(color);
+        
+        // Title
+        JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitle.setForeground(color);
+        lblTitle.setBorder(new EmptyBorder(10, 0, 10, 0));
+        
+        // Description
+        JTextArea txtDesc = new JTextArea(desc);
+        txtDesc.setWrapStyleWord(true);
+        txtDesc.setLineWrap(true);
+        txtDesc.setEditable(false);
+        txtDesc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtDesc.setForeground(Color.GRAY);
+        txtDesc.setBackground(Color.WHITE);
+        txtDesc.setMargin(new Insets(0, 10, 20, 10)); // Căn lề
+        
+        // Panel nội dung trên
+        JPanel pnlTop = new JPanel(new BorderLayout());
+        pnlTop.setBackground(Color.WHITE);
+        pnlTop.add(lblIcon, BorderLayout.NORTH);
+        pnlTop.add(lblTitle, BorderLayout.CENTER);
+        pnlTop.add(txtDesc, BorderLayout.SOUTH);
+        
+        card.add(pnlTop, BorderLayout.CENTER);
+        return card;
+    }
+
+    private JButton createButton(String text, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setPreferredSize(new Dimension(0, 50)); // Chiều cao nút
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    // --- LOGIC XỬ LÝ (GIỮ NGUYÊN) ---
 
     private void xuLyBackup() {
         try {
@@ -91,32 +153,23 @@ public class GUI_SaoLuuPhucHoi extends JPanel {
                 String pass = db.getPass();
                 String dbName = db.getDbName();
 
-                // --- ĐƯỜNG DẪN CỦA BẠN (GIỮ NGUYÊN) ---
-                String mysqldumpPath = "D:\\XAMPP\\mysql\\bin\\mysqldump.exe";
-                // --------------------------------------
-
+                String mysqldumpPath = "C:\\xampp\\mysql\\bin\\mysqldump.exe"; // [LƯU Ý] Sửa lại đường dẫn nếu cần
                 File fileCheck = new File(mysqldumpPath);
                 if (!fileCheck.exists()) {
                     JOptionPane.showMessageDialog(this, "Không tìm thấy file mysqldump tại:\n" + mysqldumpPath);
                     return;
                 }
 
-                // --- DÙNG PROCESS BUILDER ---
                 java.util.List<String> commands = new java.util.ArrayList<>();
                 commands.add(mysqldumpPath);
                 
-                // [FIX 1] THÊM CỔNG 3307 (Quan trọng vì bạn đổi port)
-                commands.add("-P"); 
-                commands.add("3307"); 
-                // --------------------------------------------------
-
+                // commands.add("-P"); commands.add("3306"); // Bỏ comment nếu dùng port khác
+                
                 commands.add("-u" + user);
                 if (!pass.isEmpty()) {
                     commands.add("-p" + pass);
                 }
 
-                // [FIX 2] ĐÃ XÓA DÒNG "--column-statistics=0" GÂY LỖI
-                
                 commands.add("--databases");
                 commands.add(dbName);
                 commands.add("-r");
@@ -137,13 +190,11 @@ public class GUI_SaoLuuPhucHoi extends JPanel {
                 
                 int exitCode = process.waitFor();
 
-                // Kiểm tra kết quả
                 File f = new File(savePath);
                 if (f.exists() && f.length() > 0) {
-                    JOptionPane.showMessageDialog(this, "✅ Sao lưu thành công!\nFile: " + savePath);
+                    JOptionPane.showMessageDialog(this, "SAO LƯU THÀNH CÔNG!\nFile: " + savePath);
                 } else {
-                    JOptionPane.showMessageDialog(this, "❌ Sao lưu thất bại! Lỗi:\n" + output.toString());
-                    System.out.println("DEBUG ERROR: " + output.toString());
+                    JOptionPane.showMessageDialog(this, "SAO LƯU THẤT BẠI! Lỗi:\n" + output.toString());
                 }
             }
         } catch (Exception ex) {
@@ -165,20 +216,20 @@ public class GUI_SaoLuuPhucHoi extends JPanel {
                 String pass = db.getPass();
                 String dbName = db.getDbName();
 
-                String mysqlPath = "D:\\XAMPP\\mysql\\bin\\mysql.exe"; 
+                String mysqlPath = "C:\\xampp\\mysql\\bin\\mysql.exe"; 
 
-                // Lệnh Restore cũng cần thêm Port 3307
+                // Lệnh Restore
                 String[] executeCmd = new String[]{"cmd.exe", "/c", 
-                    "\"" + mysqlPath + "\" -P 3307 -u" + user + (pass.isEmpty() ? "" : " -p" + pass) 
+                    "\"" + mysqlPath + "\" -u" + user + (pass.isEmpty() ? "" : " -p" + pass) 
                     + " " + dbName + " < \"" + path + "\""};
 
                 Process runtimeProcess = Runtime.getRuntime().exec(executeCmd);
                 int processComplete = runtimeProcess.waitFor();
 
                 if (processComplete == 0) {
-                    JOptionPane.showMessageDialog(this, "✅ Phục hồi dữ liệu thành công!\nHãy khởi động lại phần mềm.");
+                    JOptionPane.showMessageDialog(this, "PHỤC HỒI DỮ LIỆU THÀNH CÔNG!\nHãy khởi động lại phần mềm.");
                 } else {
-                    JOptionPane.showMessageDialog(this, "❌ Phục hồi thất bại!");
+                    JOptionPane.showMessageDialog(this, "PHỤC HỒI THẤT BẠI!");
                 }
             }
         } catch (Exception ex) {

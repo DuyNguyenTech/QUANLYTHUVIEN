@@ -15,11 +15,11 @@ public class GUI_DialogNhaCungCap extends JDialog {
         setLocationRelativeTo(parent);
         setLayout(new GridLayout(5, 2, 10, 10));
 
-        add(new JLabel("  Mã NCC:"));
+        add(new JLabel("  Mã Nhà Cung Cấp:"));
         txtMa = new JTextField();
         add(txtMa);
 
-        add(new JLabel("  Tên NCC:"));
+        add(new JLabel("  Tên Nhà Cung Cấp:"));
         txtTen = new JTextField();
         add(txtTen);
 
@@ -55,7 +55,7 @@ public class GUI_DialogNhaCungCap extends JDialog {
     private void xuLyLuu() {
         // 1. Kiểm tra rỗng
         if(txtMa.getText().trim().isEmpty() || txtTen.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập Mã và Tên NCC!");
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập Mã và Tên Nhà Cung Cấp!");
             return;
         }
 
@@ -79,7 +79,7 @@ public class GUI_DialogNhaCungCap extends JDialog {
             JOptionPane.showMessageDialog(this, "Lưu thành công!");
             dispose(); // Đóng cửa sổ
         } else {
-            JOptionPane.showMessageDialog(this, "Lưu thất bại! Có thể Mã NCC đã tồn tại.");
+            JOptionPane.showMessageDialog(this, "Lưu thất bại! Có thể Mã Nhà Cung Cấp đã tồn tại.");
         }
     }
 }
