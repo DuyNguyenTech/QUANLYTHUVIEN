@@ -46,7 +46,7 @@ public class GUI_DialogThemSach extends JDialog {
         pnlHeader.setBackground(mainColor);
         pnlHeader.setBorder(new EmptyBorder(10, 0, 10, 0));
         
-        JLabel lblHeader = new JLabel(maSachSua == null ? "THÊM SÁCH MỚI VÀO KHO" : "SỬA THÔNG TIN SÁCH");
+        JLabel lblHeader = new JLabel(maSachSua == null ? "THÊM SÁCH MỚI VÀO KHO" : "CẬP NHẬT THÔNG TIN SÁCH");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblHeader.setForeground(Color.WHITE);
         pnlHeader.add(lblHeader);
@@ -179,7 +179,7 @@ public class GUI_DialogThemSach extends JDialog {
         pnlBot.setBorder(new EmptyBorder(0, 20, 10, 20));
         
         JButton btnLuu = createButton(maSachSua == null ? "Lưu Sách" : "Cập Nhật", mainColor, Color.WHITE);
-        JButton btnLamMoi = createButton("Làm Mới", new Color(23, 162, 184), Color.WHITE);
+        JButton btnLamMoi = createButton("Xóa Form", new Color(23, 162, 184), Color.WHITE);
         JButton btnHuy = createButton("Đóng", new Color(220, 53, 69), Color.WHITE);
         
         pnlBot.add(btnLuu);
@@ -338,11 +338,11 @@ public class GUI_DialogThemSach extends JDialog {
             }
         } else { // Trường hợp SỬA SÁCH
             if(dal.updateSach(s)) {
-                JOptionPane.showMessageDialog(this, "Sửa sách thành công!");
+                JOptionPane.showMessageDialog(this, "Cập nhật sách thành công!");
                 parentGUI.loadData();
                 dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Sửa sách thất bại! Vui lòng kiểm tra lại.");
+                JOptionPane.showMessageDialog(this, "Cập nhật sách thất bại! Vui lòng kiểm tra lại.");
             }
         }
     }

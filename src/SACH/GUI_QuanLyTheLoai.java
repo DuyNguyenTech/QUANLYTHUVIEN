@@ -134,8 +134,8 @@ public class GUI_QuanLyTheLoai extends JPanel {
         pnlButtons.setBackground(bgColor);
 
         // [MÀU SẮC ĐỒNG BỘ VỚI CÁC MODULE KHÁC]
-        btnThem = createButton("Thêm Thể Loại", new Color(40, 167, 69));   // Xanh lá
-        btnSua = createButton("Sửa Thể Loại", new Color(255, 193, 7));    // Vàng cam
+        btnThem = createButton("Thêm Mới", new Color(40, 167, 69));   // Xanh lá
+        btnSua = createButton("Cập Nhật", new Color(255, 193, 7));    // Vàng cam
         btnXoa = createButton("Xóa Bỏ", new Color(220, 53, 69));      // Đỏ
         btnLamMoi = createButton("Làm Mới", new Color(23, 162, 184)); // Xanh Cyan
 

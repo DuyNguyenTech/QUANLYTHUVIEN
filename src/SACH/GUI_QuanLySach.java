@@ -41,7 +41,7 @@ public class GUI_QuanLySach extends JPanel {
             new EmptyBorder(15, 20, 15, 20)
         ));
 
-        JLabel lblTitle = new JLabel("QUẢN LÝ SÁCH", SwingConstants.CENTER);
+        JLabel lblTitle = new JLabel("QUẢN LÝ KHO SÁCH", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(mainColor);
         
@@ -160,7 +160,7 @@ public class GUI_QuanLySach extends JPanel {
         pnlFooter.setBackground(bgColor);
 
         JButton btnThem = createButton("Thêm Sách", new Color(40, 167, 69), Color.WHITE);
-        JButton btnSua = createButton("Sửa Sách", new Color(255, 193, 7), Color.WHITE);
+        JButton btnSua = createButton("Sửa Thông Tin", new Color(255, 193, 7), Color.WHITE);
         JButton btnChiTiet = createButton("Xem Chi Tiết", new Color(23, 162, 184), Color.WHITE);
         JButton btnXoa = createButton("Xóa Sách", new Color(220, 53, 69), Color.WHITE);
         

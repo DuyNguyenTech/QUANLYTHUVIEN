@@ -194,8 +194,8 @@ public class GUI_DialogThongKeSach extends JDialog {
     private void loadTongTaiSan() {
         new Thread(() -> {
             // Có thể dùng hàm này để hiện tổng toàn bộ kho (không phụ thuộc filter)
-             int tong = dal.getTongTaiSanSach();
-             SwingUtilities.invokeLater(() -> lblTongSoLuong.setText(tong + " cuốn"));
+            // int tong = dal.getTongTaiSanSach();
+            // SwingUtilities.invokeLater(() -> lblTongSoLuong.setText(tong + " cuốn"));
         }).start();
     }
 

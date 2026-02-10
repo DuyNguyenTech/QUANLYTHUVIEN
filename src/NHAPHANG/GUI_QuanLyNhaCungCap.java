@@ -50,7 +50,7 @@ public class GUI_QuanLyNhaCungCap extends JPanel {
         pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
         pnlTable.setBackground(bgColor);
 
-        String[] cols = {"Mã Nhà Cung Cấp", "Tên Nhà Cung Cấp", "Địa Chỉ", "Số Điện Thoại"};
+        String[] cols = {"Mã NCC", "Tên Nhà Cung Cấp", "Địa Chỉ", "Số Điện Thoại"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
@@ -109,7 +109,7 @@ public class GUI_QuanLyNhaCungCap extends JPanel {
         
         btnThem = createButton("Thêm Mới", new Color(40, 167, 69));
         btnSua = createButton("Sửa Thông Tin", new Color(255, 193, 7));
-        btnXoa = createButton("Xóa Nhà Cung Cấp", new Color(220, 53, 69));
+        btnXoa = createButton("Xóa NCC", new Color(220, 53, 69));
 
         pnlBot.add(btnThem);
         pnlBot.add(btnSua);
@@ -126,7 +126,7 @@ public class GUI_QuanLyNhaCungCap extends JPanel {
         btnSua.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row < 0) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn Nhà Cung Cấp cần sửa!");
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn NCC cần sửa!");
                 return;
             }
             // Lấy dữ liệu từ dòng đã chọn
@@ -143,7 +143,7 @@ public class GUI_QuanLyNhaCungCap extends JPanel {
         btnXoa.addActionListener(e -> {
             int row = table.getSelectedRow();
             if (row < 0) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn Nhà Cung Cấp cần xóa!");
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn NCC cần xóa!");
                 return;
             }
             String maNCC = table.getValueAt(row, 0).toString();

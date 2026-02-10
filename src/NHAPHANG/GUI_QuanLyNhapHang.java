@@ -56,7 +56,7 @@ public class GUI_QuanLyNhapHang extends JPanel {
 
         // [FIX] Tạo nút với kích thước đồng bộ (Width = 220 để chứa đủ chữ dài)
         btnQLNCC = createButton("Quản Lý Nhà Cung Cấp", new Color(255, 152, 0), Color.WHITE); 
-        btnNhapHang = createButton("Tạo Phiếu Nhập Mới", new Color(40, 167, 69), Color.WHITE);
+        btnNhapHang = createButton("+ Tạo Phiếu Nhập Mới", new Color(40, 167, 69), Color.WHITE);
 
         pnlBtn.add(btnQLNCC);
         pnlBtn.add(btnNhapHang);

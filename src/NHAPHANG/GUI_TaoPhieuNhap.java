@@ -304,7 +304,7 @@ public class GUI_TaoPhieuNhap extends JFrame {
 
                 for (DTO_ChiTietNhap ct : listChiTiet) {
                     if (ct.getMaSach().equals(maSach)) {
-                        JOptionPane.showMessageDialog(this, "Sách này đã có!");
+                        JOptionPane.showMessageDialog(this, "Sách này đã có trong giỏ hàng!");
                         return;
                     }
                 }
@@ -341,7 +341,7 @@ public class GUI_TaoPhieuNhap extends JFrame {
         // 3. Lưu phiếu
         btnLuu.addActionListener(e -> {
             if (listChiTiet.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Phiếu trống!");
+                JOptionPane.showMessageDialog(this, "Giỏ hàng đang trống!");
                 return;
             }
 
