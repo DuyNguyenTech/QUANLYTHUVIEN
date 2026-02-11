@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3307
--- Thời gian đã tạo: Th2 06, 2026 lúc 05:18 PM
+-- Thời gian đã tạo: Th2 11, 2026 lúc 03:42 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -40,7 +40,10 @@ CREATE TABLE `chi_tiet_nhap` (
 --
 
 INSERT INTO `chi_tiet_nhap` (`MaPhieuNhap`, `MaSach`, `SoLuong`, `DonGia`, `ThanhTien`) VALUES
-('PN2602062216', 'S012', 100, 20000.00, 2000000.00);
+('PN2602062216', 'S012', 100, 20000.00, 2000000.00),
+('PN2602070753', 'S001', 100, 100000.00, 10000000.00),
+('PN2602111255', 'S011', 20, 20000.00, 400000.00),
+('PN2602111300', 'S012', 2, 20000.00, 40000.00);
 
 -- --------------------------------------------------------
 
@@ -67,6 +70,8 @@ INSERT INTO `chi_tiet_phieu_muon` (`MaPhieuMuon`, `MaCuonSach`, `TinhTrangSach`)
 ('PM05', 'S008', 'Mới'),
 ('PM1770221007', 'S002', 'Đang mượn'),
 ('PM1770394336', 'S003', 'Đang mượn'),
+('PM1770790693', 'S015', 'Đang mượn'),
+('PM1770814072', 'S004', 'Đang mượn'),
 ('PM2602042158', 'S002', 'Đang mượn'),
 ('PM2602042159', 'S004', 'Đang mượn'),
 ('PM2602042220', 'S008', 'Đang mượn'),
@@ -110,6 +115,7 @@ INSERT INTO `doc_gia` (`MaDocGia`, `TenDocGia`, `Lop`, `NgaySinh`, `GioiTinh`, `
 ('DG010', 'Nguyễn Thị Ý Nhi', '10A3', NULL, NULL, 'Quận 3, TP.HCM', '0399887766', NULL, NULL, 1),
 ('dg099', 'du a', '12', NULL, NULL, 'h', '0123456789', NULL, NULL, 1),
 ('DG0999', 'khanh', '12A9', NULL, NULL, 'soc trang', '0910293939', NULL, NULL, 1),
+('DG101', 'Khanh', '12D1', NULL, NULL, 'HG', '1234567890', NULL, NULL, 1),
 ('DG4918', 'an', 'dh22', '2000-02-02', 'Nữ', 'ct', '0123456789', '2026-01-23', '2026-07-23', 1),
 ('DG7540', 'duy', '12D4', '2026-01-21', 'Nam', 'hg', '000000000000000', '2026-01-21', '2026-07-21', 1);
 
@@ -161,9 +167,11 @@ INSERT INTO `phieu_muon` (`MaPhieuMuon`, `MaDocGia`, `MaThuThu`, `NgayMuon`, `Ng
 ('PM01', 'DG008', 'TT001', '2026-01-28', '2026-02-04', NULL, 'Đang mượn', 0.00, 'Mượn sách mới'),
 ('PM02', 'DG006', 'TT001', '2026-01-08', '2026-01-15', NULL, 'Quá hạn', 0.00, 'Liên hệ độc giả gấp'),
 ('PM04', 'DG004', 'TT001', '2023-09-01', '2023-09-08', '2023-09-10', 'Đã trả', 5000.00, 'Trễ 2 ngày'),
-('PM05', 'DG005', 'TT002', '2026-01-27', '2026-02-03', NULL, 'Đang mượn', 0.00, ''),
+('PM05', 'DG005', 'TT002', '2026-01-27', '2026-02-03', NULL, 'Đang mượn', 40000.00, ''),
 ('PM1770221007', 'DG001', 'admin', '2026-02-04', '2026-02-11', NULL, NULL, 0.00, NULL),
 ('PM1770394336', 'DG004', 'admin', '2026-02-06', '2026-02-13', NULL, NULL, 0.00, NULL),
+('PM1770790693', 'DG002', 'admin', '2026-02-11', '2026-02-18', NULL, NULL, 0.00, NULL),
+('PM1770814072', 'DG4918', 'staff', '2026-02-11', '2026-02-18', NULL, NULL, 0.00, NULL),
 ('PM2602042158', 'DG4918', 'staff', '2026-02-04', '2026-02-11', NULL, NULL, 0.00, NULL),
 ('PM2602042159', 'DG4918', 'staff', '2026-02-04', '2026-02-11', NULL, NULL, 0.00, NULL),
 ('PM2602042220', 'DG4918', 'admin', '2026-02-04', '2026-02-11', NULL, NULL, 0.00, NULL),
@@ -191,7 +199,10 @@ CREATE TABLE `phieu_nhap` (
 --
 
 INSERT INTO `phieu_nhap` (`MaPhieuNhap`, `MaNCC`, `MaNhanVien`, `NgayNhap`, `TongTien`) VALUES
-('PN2602062216', 'NCC002', 'admin', '2026-02-06', 2000000.00);
+('PN2602062216', 'NCC002', 'admin', '2026-02-06', 2000000.00),
+('PN2602070753', 'NCC003', 'TT001', '2026-02-07', 10000000.00),
+('PN2602111255', 'NCC003', 'TT001', '2026-02-11', 400000.00),
+('PN2602111300', 'NCC002', 'TT001', '2026-02-11', 40000.00);
 
 -- --------------------------------------------------------
 
@@ -221,24 +232,26 @@ CREATE TABLE `sach` (
 INSERT INTO `sach` (`MaCuonSach`, `MaSach`, `TenSach`, `TacGia`, `NamXuatBan`, `NhaXuatBan`, `Gia`, `MoTa`, `TinhTrang`, `SoLuong`, `HinhAnh`, `MaTheLoai`) VALUES
 ('cs099', '344', 'f', 'ưe', 34, 'egeg', 1233.00, '', 'Mới', 4, '', 'TL06'),
 ('s000999', NULL, 'an', 'a', 90, 'ee', 1233.00, '', NULL, 12, '', 'TL01'),
-('S001', 'ISBN-001', 'Clean Code - Mã Sạch', 'Robert C. Martin', 2020, 'NXB Tôn Giáo', 185000.00, 'Cuốn sách gối đầu giường của mọi lập trình viên.', 'Mới', 8, 'clean_code.jpg', 'TL01'),
+('S001', 'ISBN-001', 'Clean Code - Mã Sạch', 'Robert C. Martin', 2020, 'NXB Tôn Giáo', 185000.00, 'Cuốn sách gối đầu giường của mọi lập trình viên.', 'Mới', 108, 'clean_code.jpg', 'TL01'),
 ('S002', 'ISBN-002', 'Lập Trinh Java Cơ Bản', 'Phạm Văn Ất', 2022, 'NXB Thanh Niên', 120000.00, 'Giáo trình nhập môn Java.', 'Mới', 48, 'java_basic.jpg', 'TL01'),
 ('S003', 'ISBN-003', 'Head First Design Patterns', 'Eric Freeman', 2021, 'O Reilly', 350000.00, 'Học về mẫu thiết kế phần mềm.', 'Mới', 4, 'design_pattern.jpg', 'TL01'),
-('S004', 'ISBN-004', 'Dế Mèn Phiêu Lưu Ký', 'Tô Hoài', 2019, 'NXB Kim Đồng', 45000.00, 'Tác phẩm văn học thiếu nhi kinh điển.', 'Cũ', 11, 'de_men.jpg', 'TL02'),
+('S004', 'ISBN-004', 'Dế Mèn Phiêu Lưu Ký', 'Tô Hoài', 2019, 'NXB Kim Đồng', 45000.00, 'Tác phẩm văn học thiếu nhi kinh điển.', 'Cũ', 10, 'de_men.jpg', 'TL02'),
 ('S005', 'ISBN-005', 'Mắt Biếc', 'Nguyễn Nhật Ánh', 2023, 'NXB Trẻ', 110000.00, 'Câu chuyện tình yêu buồn.', 'Mới', 19, 'mat_biec.jpg', 'TL02'),
 ('S006', 'ISBN-006', 'Số Đỏ', 'Vũ Trọng Phụng', 2018, 'NXB Văn Học', 60000.00, 'Tiểu thuyết trào phúng.', 'Cũ', 3, 'so_do.jpg', 'TL02'),
 ('S007', 'ISBN-007', 'Harry Potter và Hòn Đá Phù Thủy', 'J.K. Rowling', 2020, 'NXB Trẻ', 150000.00, 'Tập 1 của series Harry Potter.', 'Mới', 15, 'harry_potter_1.jpg', 'TL03'),
 ('S008', 'ISBN-008', 'Nhà Giả Kim', 'Paulo Coelho', 2021, 'NXB Văn Học', 79000.00, 'Hành trình theo đuổi ước mơ.', 'Mới', 99, 'nha_gia_kim.jpg', 'TL03'),
 ('S009', 'ISBN-009', 'Cha Giàu Cha Nghèo', 'Robert Kiyosaki', 2022, 'NXB Trẻ', 95000.00, 'Tư duy tài chính cá nhân.', 'Mới', 31, 'cha_giau.jpg', 'TL04'),
 ('S010', 'ISBN-010', 'Marketing Giỏi Phải Kiếm Được Tiền', 'Sergio Zyman', 2019, 'NXB Lao Động', 125000.00, 'Chiến lược Marketing thực chiến.', 'Cũ', 2, 'marketing.jpg', 'TL04'),
-('S011', 'ISBN-011', 'Đắc Nhân Tâm', 'Dale Carnegie', 2023, 'NXB Tổng Hợp', 86000.00, 'Nghệ thuật thu phục lòng người.', 'Mới', 39, 'dac_nhan_tam.jpg', 'TL05'),
+('S0100', NULL, 'Văn', 'PNT', 2000, 'GD', 200000.00, 'mota', NULL, 20, '', 'TL01'),
+('S011', 'ISBN-011', 'Đắc Nhân Tâm', 'Dale Carnegie', 2023, 'NXB Tổng Hợp', 86000.00, 'Nghệ thuật thu phục lòng người.', 'Mới', 59, 'dac_nhan_tam.jpg', 'TL05'),
 ('S0110', NULL, 'lap trinh', 'nhieu tac gia', 2023, 'giao duc', 345000.00, 'mo ta', NULL, 100, 'D:\\KNN_Java\\QUANLYTHUVIEN\\src\\com\\qlthuvien\\IMAGES\\book_images\\7.jpg', 'TL01'),
-('S012', 'ISBN-012', 'Tuổi Trẻ Đáng Giá Bao Nhiêu', 'Rosie Nguyễn', 2020, 'NXB Hội Nhà Văn', 75000.00, 'Sách truyền cảm hứng cho giới trẻ.', 'Mới', 25, 'tuoi_tre.jpg', 'TL05'),
+('S012', 'ISBN-012', 'Tuổi Trẻ Đáng Giá Bao Nhiêu', 'Rosie Nguyễn', 2020, 'NXB Hội Nhà Văn', 75000.00, 'Sách truyền cảm hứng cho giới trẻ.', 'Mới', 27, 'tuoi_tre.jpg', 'TL05'),
 ('S013', 'ISBN-013', 'Vũ Trụ Trong Vỏ Hạt Dẻ', 'Stephen Hawking', 2018, 'NXB Tri Thức', 115000.00, 'Khám phá vũ trụ huyền bí.', 'Cũ', 1, 'vu_tru.jpg', 'TL06'),
 ('S014', 'ISBN-014', 'Sapiens: Lược Sử Loài Người', 'Yuval Noah Harari', 2021, 'NXB Tri Thức', 210000.00, 'Lịch sử tiến hóa của nhân loại.', 'Mới', 8, 'sapiens.jpg', 'TL06'),
-('S015', 'ISBN-015', 'Gen: Lịch Sử Và Tương Lai', 'Siddhartha Mukherjee', 2022, 'NXB Dân Trí', 190000.00, 'Kiến thức về di truyền học.', 'Mới', 4, 'gen.jpg', 'TL06'),
-('s023', '23', 'h', 'f', 4444, 'ffs', 2.00, 'ddddddddddddddddddddddddddddd', 'Mới', 16, '5.jpg', 'TL03'),
-('S067', NULL, 'code', 'duy', 2000, 'a', 123.00, 'code dễ lắm', NULL, 100, 'D:\\KNN_Java\\QUANLYTHUVIEN\\src\\com\\qlthuvien\\IMAGES\\book_images\\6.jpg', 'TL05');
+('S015', 'ISBN-015', 'Gen: Lịch Sử Và Tương Lai', 'Siddhartha Mukherjee', 2022, 'NXB Dân Trí', 190000.00, 'Kiến thức về di truyền học.', 'Mới', 3, 'gen.jpg', 'TL06'),
+('s023', '23', 'h', 'f', 444, 'ffs', 2.00, 'ddddddddddddddddddddddddddddd', 'Mới', 16, '5.jpg', 'TL03'),
+('S067', NULL, 'code', 'duy', 2000, 'a', 123.00, 'code dễ lắm', NULL, 100, 'D:\\KNN_Java\\QUANLYTHUVIEN\\src\\com\\qlthuvien\\IMAGES\\book_images\\6.jpg', 'TL05'),
+('s10000', NULL, 'code aaa', 'đi', 2000, 'kd', 20000.00, 'jjnwvv', NULL, 20, '', 'TL01');
 
 -- --------------------------------------------------------
 
@@ -312,7 +325,29 @@ INSERT INTO `the_loai` (`MaTheLoai`, `TenTheLoai`) VALUES
 ('TL06', 'Khoa Học - Đời Sống'),
 ('TL07', 'Sinh Tồn'),
 ('TL08', 'Kỹ năng'),
-('TL09', 'Học Cách Làm Người');
+('TL09', 'Học Cách Làm Người'),
+('TL10', 'Văn Hóa');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `thong_bao`
+--
+
+CREATE TABLE `thong_bao` (
+  `MaTB` int(11) NOT NULL,
+  `TieuDe` varchar(255) NOT NULL,
+  `NoiDung` text NOT NULL,
+  `NgayDang` datetime DEFAULT current_timestamp(),
+  `NguoiDang` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `thong_bao`
+--
+
+INSERT INTO `thong_bao` (`MaTB`, `TieuDe`, `NoiDung`, `NgayDang`, `NguoiDang`) VALUES
+(3, 'bảo trì', 'hệ thống bảo trì ngày 12/2/2026', '2026-02-11 20:43:29', 'staff');
 
 -- --------------------------------------------------------
 
@@ -415,10 +450,26 @@ ALTER TABLE `the_loai`
   ADD PRIMARY KEY (`MaTheLoai`);
 
 --
+-- Chỉ mục cho bảng `thong_bao`
+--
+ALTER TABLE `thong_bao`
+  ADD PRIMARY KEY (`MaTB`);
+
+--
 -- Chỉ mục cho bảng `thu_thu`
 --
 ALTER TABLE `thu_thu`
   ADD PRIMARY KEY (`MaThuThu`);
+
+--
+-- AUTO_INCREMENT cho các bảng đã đổ
+--
+
+--
+-- AUTO_INCREMENT cho bảng `thong_bao`
+--
+ALTER TABLE `thong_bao`
+  MODIFY `MaTB` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
