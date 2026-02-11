@@ -1,5 +1,7 @@
 package NHAPHANG;
 
+import com.formdev.flatlaf.FlatClientProperties;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -14,7 +16,7 @@ public class GUI_QuanLyNhapHang extends JPanel {
     
     // Màu chủ đạo (Đồng bộ với hệ thống)
     private Color mainColor = new Color(50, 115, 220); 
-    private Color bgColor = new Color(245, 248, 253);
+    private Color bgColor = new Color(245, 248, 253); // Nền xám nhạt Premium
 
     private JTable table;
     private DefaultTableModel model;
@@ -35,28 +37,24 @@ public class GUI_QuanLyNhapHang extends JPanel {
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(bgColor);
+        setBorder(new EmptyBorder(20, 20, 20, 20)); // Căn lề form thoáng như các form trước
 
         // --- 1. HEADER (TIÊU ĐỀ & NÚT CHỨC NĂNG) ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(Color.WHITE);
-        pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
-        // Kẻ đường line dưới header
-        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-            new EmptyBorder(15, 20, 15, 20)
-        ));
+        pnlHeader.setBackground(bgColor); // Đồng bộ màu nền
+        pnlHeader.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         JLabel lblTitle = new JLabel("LỊCH SỬ NHẬP HÀNG");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26)); // Font to chuẩn Premium
         lblTitle.setForeground(mainColor);
         
         // Panel chứa nút bấm (FlowLayout Right)
         JPanel pnlBtn = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        pnlBtn.setBackground(Color.WHITE);
+        pnlBtn.setBackground(bgColor);
 
-        // [FIX] Tạo nút với kích thước đồng bộ (Width = 220 để chứa đủ chữ dài)
-        btnQLNCC = createButton("Quản Lý Nhà Cung Cấp", new Color(255, 152, 0), Color.WHITE); 
-        btnNhapHang = createButton("+ Tạo Phiếu Nhập Mới", new Color(40, 167, 69), Color.WHITE);
+        // Tạo nút với kích thước đồng bộ
+        btnQLNCC = createButton("Quản Lý Nhà Cung Cấp", new Color(255, 193, 7), Color.BLACK); // Vàng + Chữ đen cho dễ đọc
+        btnNhapHang = createButton("+ Tạo Phiếu Nhập Mới", new Color(40, 167, 69), Color.WHITE); // Xanh lá
 
         pnlBtn.add(btnQLNCC);
         pnlBtn.add(btnNhapHang);
@@ -65,10 +63,12 @@ public class GUI_QuanLyNhapHang extends JPanel {
         pnlHeader.add(pnlBtn, BorderLayout.EAST);
         add(pnlHeader, BorderLayout.NORTH);
 
-        // --- 2. TABLE (BẢNG DỮ LIỆU) ---
-        JPanel pnlTable = new JPanel(new BorderLayout());
-        pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
-        pnlTable.setBackground(bgColor);
+        // --- 2. TABLE (BẢNG DỮ LIỆU TRONG THẺ CARD) ---
+        JPanel pnlTableCard = new JPanel(new BorderLayout());
+        pnlTableCard.setBackground(Color.WHITE);
+        // Bo góc Card
+        pnlTableCard.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
+        pnlTableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         String[] cols = {"Mã Phiếu", "Nhà Cung Cấp", "Người Nhập", "Ngày Nhập", "Tổng Tiền"};
         model = new DefaultTableModel(cols, 0) {
@@ -80,18 +80,18 @@ public class GUI_QuanLyNhapHang extends JPanel {
         // [STYLE PREMIUM]
         table.setRowHeight(40); // Dòng cao thoáng
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setShowVerticalLines(false);
+        table.setShowVerticalLines(false); // Bỏ kẻ dọc
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(232, 242, 252));
+        table.setSelectionBackground(new Color(232, 242, 252)); // Xanh nhạt khi chọn
         table.setSelectionForeground(Color.BLACK);
         
         // Style Header
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(Color.WHITE);
-        header.setForeground(mainColor);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor));
-        header.setPreferredSize(new Dimension(0, 40));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        header.setBackground(new Color(248, 249, 250)); // Xám nhạt hiện đại
+        header.setForeground(new Color(50, 50, 50));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
+        header.setPreferredSize(new Dimension(0, 45));
 
         // Renderer chung (Căn giữa, Striped Rows)
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
@@ -107,15 +107,15 @@ public class GUI_QuanLyNhapHang extends JPanel {
         };
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         
-        // Renderer cho cột Tổng Tiền (In đậm, màu cam/đỏ)
+        // Renderer cho cột Tổng Tiền (In đậm, màu đỏ Premium)
         DefaultTableCellRenderer moneyRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
                 
-                setForeground(new Color(180, 0, 0)); // Màu đỏ đậm cho tiền
-                setFont(new Font("Segoe UI", Font.BOLD, 14));
+                c.setForeground(new Color(220, 53, 69)); // Màu đỏ chuẩn Flat
+                c.setFont(new Font("Segoe UI", Font.BOLD, 15)); // Chữ to rõ
                 setHorizontalAlignment(JLabel.CENTER);
                 return c;
             }
@@ -128,14 +128,14 @@ public class GUI_QuanLyNhapHang extends JPanel {
         }
         
         // Chỉnh độ rộng cột
-        table.getColumnModel().getColumn(1).setPreferredWidth(250); // Tên NCC rộng hơn
+        table.getColumnModel().getColumn(1).setPreferredWidth(280); // Tên NCC rộng hơn
 
         JScrollPane sc = new JScrollPane(table);
         sc.getViewport().setBackground(Color.WHITE);
-        sc.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        sc.setBorder(BorderFactory.createEmptyBorder()); // Xóa viền đen mặc định của ScrollPane
         
-        pnlTable.add(sc, BorderLayout.CENTER);
-        add(pnlTable, BorderLayout.CENTER);
+        pnlTableCard.add(sc, BorderLayout.CENTER);
+        add(pnlTableCard, BorderLayout.CENTER);
 
         // --- 3. EVENTS ---
         
@@ -155,8 +155,8 @@ public class GUI_QuanLyNhapHang extends JPanel {
         // Bấm nút QLNCC -> Mở Dialog Quản Lý NCC
         btnQLNCC.addActionListener(e -> {
             JDialog dialog = new JDialog();
-            dialog.setTitle("Quản Lý Nhà Cung Cấp");
-            dialog.setSize(900, 600); // Tăng kích thước dialog cho thoáng
+            dialog.setTitle("QUẢN LÝ NHÀ CUNG CẤP");
+            dialog.setSize(950, 650); // Tăng kích thước dialog cho thoáng
             dialog.setLocationRelativeTo(null);
             dialog.add(new GUI_QuanLyNhaCungCap()); 
             dialog.setModal(true); // Chặn thao tác cửa sổ dưới
@@ -181,7 +181,7 @@ public class GUI_QuanLyNhapHang extends JPanel {
         }
     }
 
-    // Hàm tạo nút bấm chuẩn style, kích thước bằng nhau
+    // Hàm tạo nút bấm chuẩn style Premium
     private JButton createButton(String text, Color bg, Color fg) {
         JButton btn = new JButton(text);
         btn.setBackground(bg);
@@ -189,8 +189,10 @@ public class GUI_QuanLyNhapHang extends JPanel {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        // [QUAN TRỌNG] Set kích thước cố định để 2 nút bằng nhau
-        btn.setPreferredSize(new Dimension(230, 45)); 
+        
+        // [QUAN TRỌNG] Set kích thước cố định và bo góc
+        btn.setPreferredSize(new Dimension(210, 42)); 
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
         return btn;
     }
 }

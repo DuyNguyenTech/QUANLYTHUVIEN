@@ -1,5 +1,6 @@
 package THONGKE;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import CHUNG.ExcelExporter;
 import MUONTRA.DAL_PhieuMuon;
 import MUONTRA.DTO_PhieuMuon;
@@ -28,8 +29,8 @@ public class GUI_DialogThongKeViPham extends JDialog {
     private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
     private DecimalFormat df = new DecimalFormat("#,### VNĐ");
     
-    // Màu chủ đạo cho Form Vi Phạm (Màu Đỏ Cảnh Báo)
     private Color alertColor = new Color(220, 53, 69); 
+    private Color bgColor = new Color(245, 248, 253);
 
     public GUI_DialogThongKeViPham(Window parent) {
         super(parent, ModalityType.APPLICATION_MODAL);
@@ -38,10 +39,11 @@ public class GUI_DialogThongKeViPham extends JDialog {
     }
 
     private void initUI() {
-        setTitle("THỐNG KÊ VI PHẠM");
-        setSize(950, 650);
+        setTitle("THỐNG KÊ VI PHẠM & QUÁ HẠN");
+        setSize(1050, 720);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
+        getContentPane().setBackground(bgColor);
 
         // --- 1. HEADER ---
         JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -49,108 +51,101 @@ public class GUI_DialogThongKeViPham extends JDialog {
         pnlHeader.setBorder(new EmptyBorder(15, 0, 15, 0));
         
         JLabel lblTitle = new JLabel("DANH SÁCH VI PHẠM & QUÁ HẠN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(Color.WHITE);
         pnlHeader.add(lblTitle);
-        
         add(pnlHeader, BorderLayout.NORTH);
 
         // --- 2. CONTENT ---
-        JPanel pnlContent = new JPanel(new BorderLayout(10, 10));
-        pnlContent.setBorder(new EmptyBorder(10, 20, 10, 20));
-        pnlContent.setBackground(Color.WHITE);
+        JPanel pnlContent = new JPanel(new BorderLayout(15, 15));
+        pnlContent.setBorder(new EmptyBorder(25, 30, 10, 30));
+        pnlContent.setBackground(bgColor);
 
-        // A. Table
-        String[] cols = {"Mã Phiếu", "Ngày Mượn", "Hẹn Trả", "Mã ĐG", "Lỗi Vi Phạm", "Tiền Phạt"};
+        // A. Table Card Premium
+        JPanel pnlTableCard = new JPanel(new BorderLayout());
+        pnlTableCard.setBackground(Color.WHITE);
+        // FIX: Truyền thuộc tính bo góc chuẩn FlatLaf 3.5.4
+        pnlTableCard.putClientProperty("FlatLaf.style", "arc: 20; border: 1,1,1,1, #E0E0E0");
+        pnlTableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        String[] cols = {"Mã Phiếu", "Ngày Mượn", "Hẹn Trả", "Mã Độc Giả", "Lỗi Vi Phạm", "Tiền Phạt"};
         model = new DefaultTableModel(cols, 0) { 
-            public boolean isCellEditable(int r, int c) { return false; } 
+            @Override public boolean isCellEditable(int r, int c) { return false; } 
         };
         table = new JTable(model);
         
-        // Style Table Premium
-        table.setRowHeight(35);
+        // Style Table
+        table.setRowHeight(42);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         table.setShowVerticalLines(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.setSelectionBackground(new Color(255, 235, 238)); // Màu chọn đỏ nhạt
+        table.setSelectionBackground(new Color(232, 240, 250)); 
         table.setSelectionForeground(Color.BLACK);
         
         JTableHeader h = table.getTableHeader();
-        h.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        h.setBackground(Color.WHITE);
-        h.setForeground(alertColor); // Header chữ đỏ
-        h.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, alertColor));
-        h.setPreferredSize(new Dimension(0, 40));
+        h.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        h.setBackground(new Color(248, 249, 250));
+        h.setForeground(alertColor);
+        h.setPreferredSize(new Dimension(0, 45));
         
-        // Renderer Chung
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer() {
+        // Renderer chuyên nghiệp
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if(!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                if(!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(252, 252, 252));
+                setHorizontalAlignment(JLabel.CENTER);
                 return c;
             }
         };
-        center.setHorizontalAlignment(JLabel.CENTER);
-        for(int i=0; i<cols.length; i++) table.getColumnModel().getColumn(i).setCellRenderer(center);
-        
-        // Renderer Cột Tiền Phạt (Đỏ Đậm)
-        table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
+
+        DefaultTableCellRenderer moneyRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if(!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
-                
-                c.setForeground(new Color(180, 0, 0)); // Đỏ đậm
-                c.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                if(!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(252, 252, 252));
+                setForeground(alertColor);
+                setFont(new Font("Segoe UI", Font.BOLD, 14));
                 setHorizontalAlignment(CENTER);
                 return c;
             }
-        });
+        };
 
-        // B. Footer Info (Tổng số)
-        JPanel pnlInfo = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlInfo.setBackground(new Color(255, 245, 245)); // Nền đỏ rất nhạt
-        pnlInfo.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(220, 220, 220)));
+        for(int i=0; i<5; i++) table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(5).setCellRenderer(moneyRenderer);
+
+        JScrollPane sc = new JScrollPane(table);
+        sc.setBorder(BorderFactory.createEmptyBorder());
+        sc.getViewport().setBackground(Color.WHITE);
+        pnlTableCard.add(sc, BorderLayout.CENTER);
+
+        // B. Info Panel bên dưới bảng
+        JPanel pnlFooterInfo = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlFooterInfo.setOpaque(false);
+        pnlFooterInfo.setBorder(new EmptyBorder(10, 5, 0, 5));
         
-        JLabel lblText = new JLabel("Tổng số trường hợp vi phạm: ");
-        lblText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        
-        lblTongViPham = new JLabel("Calculating...");
-        lblTongViPham.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        JLabel lblText = new JLabel("Tổng cộng phát hiện: ");
+        lblText.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        lblTongViPham = new JLabel("0 trường hợp");
+        lblTongViPham.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblTongViPham.setForeground(alertColor);
         
-        pnlInfo.add(lblText); 
-        pnlInfo.add(lblTongViPham);
+        pnlFooterInfo.add(lblText); 
+        pnlFooterInfo.add(lblTongViPham);
 
-        // Gộp Table + Info
-        JPanel pnlCenterWrapper = new JPanel(new BorderLayout());
-        pnlCenterWrapper.add(new JScrollPane(table), BorderLayout.CENTER);
-        pnlCenterWrapper.add(pnlInfo, BorderLayout.SOUTH);
-        
-        pnlContent.add(pnlCenterWrapper, BorderLayout.CENTER);
+        pnlContent.add(pnlTableCard, BorderLayout.CENTER);
+        pnlContent.add(pnlFooterInfo, BorderLayout.SOUTH);
         add(pnlContent, BorderLayout.CENTER);
 
         // --- 3. BOTTOM BUTTONS ---
-        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pnlBot.setBackground(new Color(245, 248, 253)); // Hoặc màu trắng tùy sở thích
-        pnlBot.setBorder(new EmptyBorder(10, 20, 10, 20));
+        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
+        pnlBot.setOpaque(false);
+        pnlBot.setBorder(new EmptyBorder(0, 0, 15, 25));
         
-        JButton btnXuat = new JButton("Xuất Excel");
-        btnXuat.setPreferredSize(new Dimension(140, 40));
-        btnXuat.setBackground(new Color(40, 167, 69)); // Xanh lá Excel
-        btnXuat.setForeground(Color.WHITE);
-        btnXuat.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnXuat.setFocusPainted(false);
-        btnXuat.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        JButton btnXuat = createButton("Xuất File Excel", new Color(40, 167, 69));
+        JButton btnDong = createButton("Đóng", new Color(108, 117, 125));
         
-        JButton btnDong = new JButton("Đóng");
-        btnDong.setPreferredSize(new Dimension(100, 40));
-        btnDong.setBackground(alertColor); // Đóng màu đỏ cho hợp tone
-        btnDong.setForeground(Color.WHITE);
-        btnDong.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnDong.setFocusPainted(false);
-        
+        // Sắp xếp thứ tự theo ý anh
         pnlBot.add(btnXuat);
         pnlBot.add(btnDong);
         add(pnlBot, BorderLayout.SOUTH);
@@ -159,7 +154,6 @@ public class GUI_DialogThongKeViPham extends JDialog {
         btnXuat.addActionListener(e -> xuLyXuatFile());
         btnDong.addActionListener(e -> dispose());
 
-        // Double click xem chi tiết
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -168,11 +162,8 @@ public class GUI_DialogThongKeViPham extends JDialog {
                     if (row >= 0) {
                         String maPhieu = table.getValueAt(row, 0).toString();
                         DTO_PhieuMuon pmFull = dalPhieu.getPhieuByMa(maPhieu);
-                        
                         if (pmFull != null) {
                             new GUI_DialogChiTietPhieuMuon(GUI_DialogThongKeViPham.this, pmFull).setVisible(true);
-                        } else {
-                            JOptionPane.showMessageDialog(GUI_DialogThongKeViPham.this, "Không tìm thấy dữ liệu chi tiết!");
                         }
                     }
                 }
@@ -182,22 +173,31 @@ public class GUI_DialogThongKeViPham extends JDialog {
 
     private void loadData() {
         model.setRowCount(0);
-        ArrayList<DTO_PhieuMuon> list = dal.getListViPham();
-        
-        for (DTO_PhieuMuon pm : list) {
-            String henTra = (pm.getNgayHenTra() != null) ? sdf.format(pm.getNgayHenTra()) : "";
-            String phat = df.format(pm.getTienPhat());
-            
+        java.util.ArrayList<MUONTRA.DTO_PhieuMuon> list = (java.util.ArrayList<MUONTRA.DTO_PhieuMuon>) dal.getListViPham();
+        for (MUONTRA.DTO_PhieuMuon pm : list) {
             model.addRow(new Object[]{
                 pm.getMaPhieuMuon(),
                 (pm.getNgayMuon() != null ? sdf.format(pm.getNgayMuon()) : ""),
-                henTra, 
+                (pm.getNgayHenTra() != null ? sdf.format(pm.getNgayHenTra()) : ""), 
                 pm.getMaDocGia(),
-                pm.getTinhTrang(), // Lỗi vi phạm (Quá hạn/Mất sách...)
-                phat
+                pm.getTinhTrang(), 
+                df.format(pm.getTienPhat())
             });
         }
         lblTongViPham.setText(list.size() + " trường hợp");
+    }
+
+    private JButton createButton(String text, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setPreferredSize(new Dimension(160, 42));
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // FIX: focusedBorderColor
+        btn.putClientProperty("FlatLaf.style", "arc: 10; borderWidth: 0; focusedBorderColor: #FFFFFF");
+        return btn;
     }
 
     private void xuLyXuatFile() {

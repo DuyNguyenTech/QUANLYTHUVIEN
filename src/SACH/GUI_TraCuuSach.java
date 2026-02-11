@@ -2,6 +2,7 @@ package SACH;
 
 import HETHONG.GUI_Main;
 import HETHONG.DTO_TaiKhoan;
+import com.formdev.flatlaf.FlatClientProperties;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -29,49 +30,46 @@ public class GUI_TraCuuSach extends JPanel {
     private JButton btnGioSach;
 
     public GUI_TraCuuSach() {
-        initUI();
-        loadData();
+        try {
+            initUI();
+            loadData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải giao diện Tra cứu sách: " + e.getMessage());
+        }
     }
 
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(bgColor);
+        setBorder(new EmptyBorder(20, 20, 20, 20)); // Căn lề cho form thoáng hơn
 
         // --- HEADER ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(Color.WHITE);
-        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-            new EmptyBorder(15, 20, 15, 20)
-        ));
+        pnlHeader.setBackground(bgColor);
+        pnlHeader.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         JLabel lblTitle = new JLabel("TRA CỨU SÁCH");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(mainColor);
 
         // --- SEARCH BAR ---
         JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        pnlSearch.setBackground(Color.WHITE);
-
-        JLabel lblSearch = new JLabel("Tìm kiếm:");
-        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblSearch.setForeground(Color.GRAY);
+        pnlSearch.setBackground(bgColor);
 
         txtTimKiem = new JTextField();
-        txtTimKiem.setPreferredSize(new Dimension(250, 40));
-        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtTimKiem.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        txtTimKiem.setPreferredSize(new Dimension(300, 42));
+        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        // Style FlatLaf: Bo tròn như viên thuốc, có placeholder text
+        txtTimKiem.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Nhập tên sách, tác giả...");
+        txtTimKiem.putClientProperty(FlatClientProperties.STYLE, "arc: 999; borderWidth: 1; borderColor: #cccccc; focusedBorderColor: #1877F2; margin: 0, 15, 0, 15");
 
-        JButton btnTim = new JButton("Tìm");
+        JButton btnTim = new JButton("Tìm Kiếm");
         setupButton(btnTim, mainColor);
 
-        JButton btnLamMoi = new JButton("Làm mới");
-        setupButton(btnLamMoi, new Color(40, 167, 69));
+        JButton btnLamMoi = new JButton("Làm Mới");
+        setupButton(btnLamMoi, new Color(108, 117, 125)); // Xám ghi
 
-        pnlSearch.add(lblSearch);
         pnlSearch.add(txtTimKiem);
         pnlSearch.add(btnTim);
         pnlSearch.add(btnLamMoi);
@@ -80,10 +78,11 @@ public class GUI_TraCuuSach extends JPanel {
         pnlHeader.add(pnlSearch, BorderLayout.EAST);
         add(pnlHeader, BorderLayout.NORTH);
 
-        // --- TABLE ---
-        JPanel pnlTable = new JPanel(new BorderLayout());
-        pnlTable.setBackground(bgColor);
-        pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
+        // --- TABLE (Khung thẻ Card bo góc) ---
+        JPanel pnlTableCard = new JPanel(new BorderLayout());
+        pnlTableCard.setBackground(Color.WHITE);
+        pnlTableCard.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
+        pnlTableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         String[] cols = {"Mã Sách", "Tên Sách", "Tác Giả", "Thể Loại", "Năm XB", "Tình Trạng", "Số lượng"};
         model = new DefaultTableModel(cols, 0) {
@@ -91,16 +90,18 @@ public class GUI_TraCuuSach extends JPanel {
         };
 
         table = new JTable(model);
-        table.setRowHeight(35);
+        table.setRowHeight(40);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.setShowGrid(true);
-        table.setGridColor(new Color(230, 230, 230));
+        table.setShowVerticalLines(false);
+        table.setSelectionBackground(new Color(232, 242, 252));
+        table.setSelectionForeground(Color.BLACK);
 
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(new Color(245, 245, 245));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        header.setBackground(new Color(248, 249, 250));
         header.setForeground(new Color(50, 50, 50));
-        header.setPreferredSize(new Dimension(0, 40));
+        header.setPreferredSize(new Dimension(0, 45));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(JLabel.CENTER);
@@ -120,10 +121,10 @@ public class GUI_TraCuuSach extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 String status = value.toString();
                 if (status.equals("Còn sách")) {
-                    c.setForeground(new Color(30, 130, 30)); 
+                    c.setForeground(new Color(40, 167, 69)); 
                     c.setFont(new Font("Segoe UI", Font.BOLD, 14));
                 } else {
-                    c.setForeground(Color.RED); 
+                    c.setForeground(new Color(220, 53, 69)); 
                     c.setFont(new Font("Segoe UI", Font.BOLD, 14));
                 }
                 setHorizontalAlignment(JLabel.CENTER);
@@ -131,6 +132,7 @@ public class GUI_TraCuuSach extends JPanel {
             }
         });
         
+        // Ẩn cột số lượng nhưng vẫn giữ dữ liệu để kiểm tra logic
         table.getColumnModel().getColumn(6).setMinWidth(0);
         table.getColumnModel().getColumn(6).setMaxWidth(0);
         table.getColumnModel().getColumn(6).setWidth(0);
@@ -140,21 +142,21 @@ public class GUI_TraCuuSach extends JPanel {
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.getViewport().setBackground(Color.WHITE);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        scroll.setBorder(BorderFactory.createEmptyBorder());
 
-        pnlTable.add(scroll, BorderLayout.CENTER);
-        add(pnlTable, BorderLayout.CENTER);
+        pnlTableCard.add(scroll, BorderLayout.CENTER);
+        add(pnlTableCard, BorderLayout.CENTER);
 
         // --- FOOTER (GIỎ HÀNG) ---
-        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
+        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
         pnlFooter.setBackground(bgColor);
         
-        JButton btnThemGio = new JButton("Thêm vào giỏ");
-        setupButton(btnThemGio, new Color(255, 193, 7)); 
+        JButton btnThemGio = new JButton("Thêm Vào Giỏ");
+        setupButton(btnThemGio, new Color(255, 193, 7)); // Màu vàng
         btnThemGio.setForeground(Color.BLACK); 
         
-        btnGioSach = new JButton("Giỏ sách (0)");
-        setupButton(btnGioSach, new Color(40, 167, 69)); 
+        btnGioSach = new JButton("Xem Giỏ Sách (0)");
+        setupButton(btnGioSach, new Color(40, 167, 69)); // Màu xanh lá
 
         pnlFooter.add(btnThemGio);
         pnlFooter.add(btnGioSach);
@@ -163,6 +165,7 @@ public class GUI_TraCuuSach extends JPanel {
         // --- EVENTS ---
         btnTim.addActionListener(e -> xuLyTimKiem());
         btnLamMoi.addActionListener(e -> { txtTimKiem.setText(""); loadData(); });
+        
         txtTimKiem.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) { if (e.getKeyCode() == KeyEvent.VK_ENTER) xuLyTimKiem(); }
@@ -174,7 +177,8 @@ public class GUI_TraCuuSach extends JPanel {
                     int row = table.getSelectedRow();
                     if(row >= 0) {
                         String ma = table.getValueAt(row, 0).toString();
-                        new GUI_DialogChiTietSach(SwingUtilities.getWindowAncestor(GUI_TraCuuSach.this), ma).setVisible(true);
+                        Window win = SwingUtilities.getWindowAncestor(GUI_TraCuuSach.this);
+                        new GUI_DialogChiTietSach(win, ma).setVisible(true);
                     }
                 }
             }
@@ -185,13 +189,13 @@ public class GUI_TraCuuSach extends JPanel {
     }
 
     private void setupButton(JButton btn, Color bg) {
-        btn.setPreferredSize(new Dimension(150, 40));
+        btn.setPreferredSize(new Dimension(160, 42));
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder());
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setFocusPainted(false);
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
     }
 
     private void loadData() {
@@ -204,7 +208,7 @@ public class GUI_TraCuuSach extends JPanel {
         String key = txtTimKiem.getText().trim();
         if (key.isEmpty()) { loadData(); return; }
         model.setRowCount(0);
-        ArrayList<DTO_Sach> list = dal.searchSach(key, "Tất cả");
+        ArrayList<DTO_Sach> list = dal.searchSach(key, "Tất cả"); // Cần đảm bảo DAL có hàm này
         for (DTO_Sach s : list) addDataRow(s);
     }
 
@@ -227,13 +231,13 @@ public class GUI_TraCuuSach extends JPanel {
     private void xuLyThemVaoGio() {
         int row = table.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn sách cần mượn!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một cuốn sách từ danh sách!");
             return;
         }
 
         int soLuongTon = Integer.parseInt(table.getValueAt(row, 6).toString());
         if (soLuongTon <= 0) {
-            JOptionPane.showMessageDialog(this, "Sách này đã hết, không thể mượn!");
+            JOptionPane.showMessageDialog(this, "Sách này hiện đã hết trong kho, không thể mượn!");
             return;
         }
 
@@ -241,27 +245,27 @@ public class GUI_TraCuuSach extends JPanel {
         
         for (DTO_Sach s : gioSach) {
             if (s.getMaCuonSach().equals(maSach)) {
-                JOptionPane.showMessageDialog(this, "Bạn đã thêm sách này vào giỏ rồi!");
+                JOptionPane.showMessageDialog(this, "Bạn đã thêm sách này vào giỏ trước đó rồi!");
                 return;
             }
         }
         
         if (gioSach.size() >= 5) {
-            JOptionPane.showMessageDialog(this, "Chỉ được mượn tối đa 5 cuốn!");
+            JOptionPane.showMessageDialog(this, "Bạn chỉ được mượn tối đa 5 cuốn sách cùng lúc!");
             return;
         }
 
         DTO_Sach s = dal.getDetail(maSach);
         if (s != null) {
             gioSach.add(s);
-            capNhatSoLuongGio(); // Gọi hàm cập nhật
-            JOptionPane.showMessageDialog(this, "Đã thêm vào giỏ!");
+            capNhatSoLuongGio(); 
+            JOptionPane.showMessageDialog(this, "Đã thêm [" + s.getTenSach() + "] vào giỏ!");
         }
     }
 
-    // [QUAN TRỌNG] Hàm này để GUI_DialogGioSach gọi về khi xóa sách
+    // Hàm gọi về để cập nhật số lượng nút
     public void capNhatSoLuongGio() {
-        btnGioSach.setText("Giỏ sách (" + gioSach.size() + ")");
+        btnGioSach.setText("Xem Giỏ Sách (" + gioSach.size() + ")");
     }
 
     private void xuLyXemGio() {
@@ -271,24 +275,23 @@ public class GUI_TraCuuSach extends JPanel {
         if (parent instanceof GUI_Main) {
              GUI_Main main = (GUI_Main) parent;
              DTO_TaiKhoan tk = main.getTaiKhoan(); 
-             if (tk != null) {
-                 maDG = tk.getMaDocGia();
-             }
+             if (tk != null) maDG = tk.getMaDocGia();
         }
 
         if (maDG == null || maDG.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Chức năng này dành cho Độc giả!");
+            JOptionPane.showMessageDialog(this, "Chức năng này chỉ dành cho tài khoản Độc giả!");
             return;
         }
 
-        // [SỬA LẠI]: Truyền 'this' (GUI_TraCuuSach) vào
+        // Truyền 'this' vào để Form con gọi lại hàm capNhatSoLuongGio()
         GUI_DialogGioSach dialog = new GUI_DialogGioSach(parent, this, gioSach, maDG);
         dialog.setVisible(true);
         
+        // Nếu người dùng đã bấm Gửi Yêu Cầu thành công thì xóa giỏ sách
         if(dialog.isDaGuiYeuCau()) {
             gioSach.clear();
-            capNhatSoLuongGio(); // Cập nhật lại số lượng về 0
-            loadData();
+            capNhatSoLuongGio(); 
+            loadData(); // Tải lại bảng sách
         }
     }
 }

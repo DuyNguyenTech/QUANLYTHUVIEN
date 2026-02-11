@@ -6,7 +6,7 @@ import CHUNG.DBConnect;
 
 public class DAL_TaiKhoan {
 
-    // 1. LOGIN (Đăng nhập)
+    // 1. LOGIN (Đăng nhập) - Trả về đối tượng tài khoản
     public DTO_TaiKhoan login(String tenDangNhap, String matKhau) {
         DTO_TaiKhoan tk = null;
         String sql = "SELECT * FROM tai_khoan WHERE TenDangNhap = ? AND MatKhau = ?";
@@ -30,8 +30,10 @@ public class DAL_TaiKhoan {
         return tk;
     }
 
-    // 2. CHECK PASS CŨ (Kiểm tra mật khẩu cũ trước khi đổi)
-    public boolean checkMatKhau(String username, String password) {
+    // =======================================================
+    // [ĐÃ THÊM MỚI] Dùng cho GUI_DialogDoiMatKhau
+    // =======================================================
+    public boolean checkLogin(String username, String password) {
         String sql = "SELECT * FROM tai_khoan WHERE TenDangNhap = ? AND MatKhau = ?";
         try (Connection conn = new DBConnect().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -40,9 +42,15 @@ public class DAL_TaiKhoan {
             ps.setString(2, password);
             
             ResultSet rs = ps.executeQuery();
-            return rs.next(); // Nếu tìm thấy => Mật khẩu cũ đúng
+            return rs.next(); // Nếu rs.next() có dữ liệu => trả về TRUE (Đúng mật khẩu)
         } catch (Exception e) { e.printStackTrace(); }
         return false;
+    }
+
+    // 2. CHECK PASS CŨ (Giữ lại để tương thích ngược với các file code cũ của anh)
+    public boolean checkMatKhau(String username, String password) {
+        // Tái sử dụng lại hàm checkLogin cho code ngắn gọn
+        return checkLogin(username, password); 
     }
 
     // 3. ĐỔI PASS (QUAN TRỌNG: Đã có WHERE để không update nhầm người khác)

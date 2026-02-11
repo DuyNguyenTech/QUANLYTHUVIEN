@@ -1,5 +1,6 @@
 package MUONTRA;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -31,28 +32,26 @@ public class GUI_LichSuMuon extends JPanel {
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(bgColor);
+        setBorder(new EmptyBorder(20, 20, 20, 20)); // Căn lề form thoáng như Tra Cứu Sách
 
         // --- 1. HEADER ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(Color.WHITE);
-        pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
-        // Kẻ đường line dưới
-        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-            new EmptyBorder(15, 20, 15, 20)
-        ));
+        pnlHeader.setBackground(bgColor); // Đồng bộ màu nền
+        pnlHeader.setBorder(new EmptyBorder(0, 0, 15, 0));
         
         JLabel lblTitle = new JLabel("LỊCH SỬ MƯỢN SÁCH CỦA BẠN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26)); // Phóng to font cho sang
         lblTitle.setForeground(mainColor);
         pnlHeader.add(lblTitle, BorderLayout.WEST);
         
         add(pnlHeader, BorderLayout.NORTH);
 
-        // --- 2. TABLE ---
-        JPanel pnlTable = new JPanel(new BorderLayout());
-        pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
-        pnlTable.setBackground(bgColor);
+        // --- 2. TABLE (Khung thẻ Card bo góc FlatLaf) ---
+        JPanel pnlTableCard = new JPanel(new BorderLayout());
+        pnlTableCard.setBackground(Color.WHITE);
+        // Style bo góc 20px, có viền nhạt
+        pnlTableCard.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
+        pnlTableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         String[] cols = {"Mã Phiếu", "Tên Sách", "Ngày Mượn", "Hạn Trả", "Ngày Trả", "Trạng Thái", "Tiền Phạt"};
         model = new DefaultTableModel(cols, 0) {
@@ -71,11 +70,11 @@ public class GUI_LichSuMuon extends JPanel {
 
         // Style Header
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(Color.WHITE);
-        header.setForeground(mainColor);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor));
-        header.setPreferredSize(new Dimension(0, 40));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        header.setBackground(new Color(248, 249, 250)); // Nền xám nhạt cho header
+        header.setForeground(new Color(50, 50, 50));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
+        header.setPreferredSize(new Dimension(0, 45));
 
         // Renderer Chung (Căn giữa + Striped Rows)
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
@@ -124,7 +123,7 @@ public class GUI_LichSuMuon extends JPanel {
                     c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
                 }
                 
-                c.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                c.setFont(new Font("Segoe UI", Font.BOLD, 14));
                 
                 // Tô màu chữ
                 if (status.contains("Đang mượn")) {
@@ -146,23 +145,25 @@ public class GUI_LichSuMuon extends JPanel {
 
         JScrollPane sc = new JScrollPane(table);
         sc.getViewport().setBackground(Color.WHITE);
-        sc.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        sc.setBorder(BorderFactory.createEmptyBorder()); // Xóa viền đen mặc định của ScrollPane
         
-        pnlTable.add(sc, BorderLayout.CENTER);
-        add(pnlTable, BorderLayout.CENTER);
+        pnlTableCard.add(sc, BorderLayout.CENTER);
+        add(pnlTableCard, BorderLayout.CENTER);
         
         // --- 3. FOOTER (BUTTON REFRESH) ---
-        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 15));
         pnlFooter.setBackground(bgColor);
-        pnlFooter.setBorder(new EmptyBorder(0, 0, 20, 20));
         
-        JButton btnRefresh = new JButton("Làm mới danh sách");
-        btnRefresh.setPreferredSize(new Dimension(180, 45));
+        JButton btnRefresh = new JButton("Làm Mới Danh Sách");
+        btnRefresh.setPreferredSize(new Dimension(180, 42));
         btnRefresh.setBackground(mainColor);
         btnRefresh.setForeground(Color.WHITE);
         btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRefresh.setFocusPainted(false);
         btnRefresh.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // [QUAN TRỌNG] Bo góc nút bấm
+        btnRefresh.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
         
         btnRefresh.addActionListener(e -> loadData());
         
@@ -170,7 +171,7 @@ public class GUI_LichSuMuon extends JPanel {
         add(pnlFooter, BorderLayout.SOUTH);
     }
 
-    // Load dữ liệu từ DAL lên bảng
+    // Load dữ liệu từ DAL lên bảng (Giữ nguyên logic của anh 100%)
     public void loadData() {
         model.setRowCount(0);
         if (currentMaDocGia == null || currentMaDocGia.isEmpty()) return;

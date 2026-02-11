@@ -1,24 +1,24 @@
 package THONGKE;
 
 public class DTO_ThongKeSach {
-    private String maSach;
+    private String maCuonSach;
     private String tenSach;
-    private String tinhTrang; 
+    private String trangThai;
 
-    public DTO_ThongKeSach() { }
+    public DTO_ThongKeSach() {}
 
-    public DTO_ThongKeSach(String maSach, String tenSach, String tinhTrang) {
-        this.maSach = maSach;
+    public DTO_ThongKeSach(String maCuonSach, String tenSach, String trangThai) {
+        this.maCuonSach = maCuonSach;
         this.tenSach = tenSach;
-        this.tinhTrang = tinhTrang;
+        this.trangThai = trangThai;
     }
 
-    public String getMaSach() { return maSach; }
-    public void setMaSach(String maSach) { this.maSach = maSach; }
+    public String getMaCuonSach() { return maCuonSach; }
+    public void setMaCuonSach(String maCuonSach) { this.maCuonSach = maCuonSach; }
 
     public String getTenSach() { return tenSach; }
     public void setTenSach(String tenSach) { this.tenSach = tenSach; }
 
-    public String getTinhTrang() { return tinhTrang; }
-    public void setTinhTrang(String tinhTrang) { this.tinhTrang = tinhTrang; }
+    public String getTrangThai() { return trangThai; }
+    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
 }

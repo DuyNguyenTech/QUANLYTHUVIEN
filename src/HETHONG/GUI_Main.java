@@ -7,19 +7,14 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -29,26 +24,29 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
-// Import module Cài đặt & Sao lưu
+// Import các Module
 import CAIDAT.GUI_CauHinh;
 import CAIDAT.GUI_SaoLuuPhucHoi;
-import CHUNG.DBConnect;
+import DOCGIA.DAL_DocGia;
+import DOCGIA.DTO_DocGia;
 import DOCGIA.GUI_QuanLyDocGia;
 import MUONTRA.GUI_LichSuMuon;
 import MUONTRA.GUI_QuanLyMuonTra;
+import NHAPHANG.GUI_QuanLyNhapHang;
 import SACH.GUI_QuanLySach;
 import SACH.GUI_QuanLyTheLoai;
 import SACH.GUI_TraCuuSach;
 import THONGKE.GUI_ThongKe;
 import THUTHU.GUI_QuanLyThuThu;
-// Import module Nhập Hàng
-import NHAPHANG.GUI_QuanLyNhapHang;
+import THONGKE.GUI_QuanLyThongBao; // Import module mới
 
 public class GUI_Main extends JFrame {
 
@@ -79,12 +77,10 @@ public class GUI_Main extends JFrame {
         else if (dTO_TaiKhoan.getPhanQuyen() == 2) roleTitle = "THỦ THƯ";
 
         setTitle("HỆ THỐNG QUẢN LÝ THƯ VIỆN - " + roleTitle);
-        
         setSize(1200, 750); 
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH); 
-        
         setLayout(new BorderLayout());
 
         // =================================================================
@@ -100,7 +96,7 @@ public class GUI_Main extends JFrame {
         panelUser.setBackground(mainColor);
         panelUser.setBorder(new EmptyBorder(15, 0, 10, 0));
 
-        // Logic Avatar
+        // Logic Avatar (Tối ưu dùng DAL thay vì SQL trực tiếp)
         String avatarName = "reader.png"; 
         if (dTO_TaiKhoan.getPhanQuyen() == 1) avatarName = "admin.png";
         else if (dTO_TaiKhoan.getPhanQuyen() == 2) avatarName = "staff.png";
@@ -171,13 +167,17 @@ public class GUI_Main extends JFrame {
         } else { // --- ADMIN (1) & THỦ THƯ (2) ---
             panelList.add(createMenuButton("Quản Lý Sách"));
             panelList.add(createMenuButton("Quản Lý Nhập Hàng")); 
-            
             panelList.add(createMenuButton("Quản Lý Thể Loại")); 
             panelList.add(createMenuButton("Quản Lý Độc Giả"));
             panelList.add(createMenuButton("Quản Lý Mượn Trả"));
             
             if (dTO_TaiKhoan.getPhanQuyen() == 1) {
                 panelList.add(createMenuButton("Quản Lý Thủ Thư")); 
+            }
+
+            // === CẬP NHẬT MỚI: Menu Quản Lý Thông Báo ===
+            if (dTO_TaiKhoan.getPhanQuyen() == 1 || dTO_TaiKhoan.getPhanQuyen() == 2) {
+                panelList.add(createMenuButton("Quản Lý Thông Báo"));
             }
 
             panelList.add(createMenuButton("Thống Kê"));
@@ -245,8 +245,8 @@ public class GUI_Main extends JFrame {
         panelContent = new JPanel(new BorderLayout());
         panelContent.setBackground(bgColor);
         
-        // [CẬP NHẬT] Truyền thông tin tài khoản vào để phân quyền hiển thị Dashboard
-        panelContent.add(new GUI_TrangChu(dTO_TaiKhoan)); 
+        // Mặc định gọi Trang Chủ
+        changeContent("Trang Chủ");
 
         pnlRight.add(panelContent, BorderLayout.CENTER);
         add(pnlRight, BorderLayout.CENTER);
@@ -263,18 +263,17 @@ public class GUI_Main extends JFrame {
     }
 
     private String getGioiTinhDocGia(String maDG) {
-        String gioitinh = "Nam"; 
-        if(maDG == null) return gioitinh;
+        if(maDG == null) return "Nam";
         try {
-            Connection conn = new DBConnect().getConnection();
-            String sql = "SELECT GioiTinh FROM DOC_GIA WHERE MaDocGia = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, maDG);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) gioitinh = rs.getString("GioiTinh");
-            conn.close();
-        } catch (Exception e) { e.printStackTrace(); }
-        return gioitinh;
+            DAL_DocGia dalDG = new DAL_DocGia();
+            DTO_DocGia dg = dalDG.getChiTietDocGia(maDG);
+            if (dg != null && dg.getGioiTinh() != null) {
+                return dg.getGioiTinh();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Nam";
     }
 
     private JButton createMenuButton(String text) {
@@ -322,60 +321,76 @@ public class GUI_Main extends JFrame {
 
     // --- HÀM CHUYỂN ĐỔI GIAO DIỆN CHÍNH ---
     private void changeContent(String menuName) {
-        // Với các chức năng thường thì xóa content cũ để load cái mới
-        panelContent.removeAll();
+        try {
+            panelContent.removeAll();
 
-        switch (menuName) {
-            case "Trang Chủ":
-                // [CẬP NHẬT] Truyền thông tin tài khoản vào để phân quyền hiển thị Dashboard
-                panelContent.add(new GUI_TrangChu(dTO_TaiKhoan));
-                break;
-            case "Quản Lý Sách":
-                panelContent.add(new GUI_QuanLySach());                
-                break;
-            case "Quản Lý Nhập Hàng":
-                String maNV = dTO_TaiKhoan.getMaThuThu();
-                if (maNV == null) maNV = dTO_TaiKhoan.getUserName(); 
-                panelContent.add(new GUI_QuanLyNhapHang(maNV, dTO_TaiKhoan.getUserName()));
-                break;
-            case "Quản Lý Thể Loại":
-                panelContent.add(new GUI_QuanLyTheLoai());                
-                break;
-            case "Quản Lý Độc Giả":
-                panelContent.add(new GUI_QuanLyDocGia());                   
-                break;
-            case "Quản Lý Mượn Trả":
-                panelContent.add(new GUI_QuanLyMuonTra());
-                break;
-            case "Quản Lý Thủ Thư": 
-                panelContent.add(new GUI_QuanLyThuThu());
-                break;
-            case "Thống Kê": 
-                panelContent.add(new GUI_ThongKe());
-                break;
-            case "Cài Đặt Hệ Thống":
-                panelContent.add(new GUI_CauHinh());
-                break;
-            case "Sao Lưu Dữ Liệu":
-                panelContent.add(new GUI_SaoLuuPhucHoi());
-                break;
-            case "Tra Cứu Sách":
-                panelContent.add(new GUI_TraCuuSach());
-                break;
-            case "Lịch Sử Mượn":
-                String maDocGia = dTO_TaiKhoan.getMaDocGia(); 
-                panelContent.add(new GUI_LichSuMuon(maDocGia)); 
-                break;
-            case "Thông Tin Cá Nhân":
-                panelContent.add(new GUI_ThongTinCaNhan(dTO_TaiKhoan.getMaDocGia(), dTO_TaiKhoan.getUserName()));                
-                break;
-            default:
-                panelContent.add(createPlaceholder("Chức năng: " + menuName));
-                break;
-                
+            switch (menuName) {
+                case "Trang Chủ":
+                    panelContent.add(new GUI_TrangChu(dTO_TaiKhoan));
+                    break;
+                case "Quản Lý Sách":
+                    panelContent.add(new GUI_QuanLySach());                
+                    break;
+                case "Quản Lý Nhập Hàng":
+                    String maNV = dTO_TaiKhoan.getMaThuThu();
+                    if (maNV == null || maNV.isEmpty()) maNV = dTO_TaiKhoan.getUserName(); 
+                    panelContent.add(new GUI_QuanLyNhapHang(maNV, dTO_TaiKhoan.getUserName()));
+                    break;
+                case "Quản Lý Thể Loại":
+                    panelContent.add(new GUI_QuanLyTheLoai());                
+                    break;
+                case "Quản Lý Độc Giả":
+                    panelContent.add(new GUI_QuanLyDocGia());                   
+                    break;
+                case "Quản Lý Mượn Trả":
+                    panelContent.add(new GUI_QuanLyMuonTra());
+                    break;
+                case "Quản Lý Thủ Thư": 
+                    panelContent.add(new GUI_QuanLyThuThu());
+                    break;
+                // === CẬP NHẬT MỚI: Case chuyển đổi Module Thông báo ===
+                case "Quản Lý Thông Báo": 
+                    panelContent.add(new GUI_QuanLyThongBao(dTO_TaiKhoan)); 
+                    break;
+                case "Thống Kê": 
+                    panelContent.add(new GUI_ThongKe());
+                    break;
+                case "Cài Đặt Hệ Thống":
+                    panelContent.add(new GUI_CauHinh());
+                    break;
+                case "Sao Lưu Dữ Liệu":
+                    panelContent.add(new GUI_SaoLuuPhucHoi());
+                    break;
+                case "Tra Cứu Sách":
+                    panelContent.add(new GUI_TraCuuSach());
+                    break;
+                case "Lịch Sử Mượn":
+                    panelContent.add(new GUI_LichSuMuon(dTO_TaiKhoan.getMaDocGia())); 
+                    break;
+                case "Thông Tin Cá Nhân":
+                    panelContent.add(new GUI_ThongTinCaNhan(dTO_TaiKhoan.getMaDocGia(), dTO_TaiKhoan.getUserName()));                
+                    break;
+                default:
+                    panelContent.add(createPlaceholder("Chức năng: " + menuName));
+                    break;
+            }
+            panelContent.revalidate();
+            panelContent.repaint();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            panelContent.removeAll();
+            JPanel pnlError = new JPanel(new GridBagLayout());
+            pnlError.setBackground(bgColor);
+            JLabel lblErr = new JLabel("Lỗi hiển thị chức năng: " + menuName);
+            lblErr.setFont(new Font("Segoe UI", Font.BOLD, 20));
+            lblErr.setForeground(Color.RED);
+            pnlError.add(lblErr);
+            panelContent.add(pnlError);
+            panelContent.revalidate();
+            panelContent.repaint();
+            JOptionPane.showMessageDialog(this, "Không thể tải chức năng [" + menuName + "].\nChi tiết lỗi: " + ex.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
         }
-        panelContent.revalidate();
-        panelContent.repaint();
     }
 
     private JPanel createPlaceholder(String title) {

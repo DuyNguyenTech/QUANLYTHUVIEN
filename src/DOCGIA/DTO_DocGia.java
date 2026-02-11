@@ -5,15 +5,27 @@ import java.sql.Date;
 public class DTO_DocGia {
     private String maDocGia;
     private String tenDocGia;
-    private Date ngaySinh;      // Dùng cho DAL cũ
-    private String gioiTinh;    // Dùng cho DAL cũ
-    private String lop;         // MỚI: Dùng cho GUI Thêm
+    private Date ngaySinh;      
+    private String gioiTinh;    
+    private String lop;         
     private String sdt;         
     private String diaChi;
 
+    // 1. Constructor rỗng (Bắt buộc phải có để DAL tạo đối tượng)
     public DTO_DocGia() {}
 
-    // Constructor 1: Dùng cho DAL (Lấy từ CSDL ra)
+    // 2. Constructor FULL tham số (MỚI - Dùng để bao quát mọi trường hợp)
+    public DTO_DocGia(String maDocGia, String tenDocGia, Date ngaySinh, String gioiTinh, String lop, String sdt, String diaChi) {
+        this.maDocGia = maDocGia;
+        this.tenDocGia = tenDocGia;
+        this.ngaySinh = ngaySinh;
+        this.gioiTinh = gioiTinh;
+        this.lop = lop;
+        this.sdt = sdt;
+        this.diaChi = diaChi;
+    }
+
+    // 3. Constructor cho DAL cũ (Giữ nguyên để không lỗi code cũ)
     public DTO_DocGia(String maDocGia, String tenDocGia, Date ngaySinh, String gioiTinh, String sdt, String diaChi) {
         this.maDocGia = maDocGia;
         this.tenDocGia = tenDocGia;
@@ -23,7 +35,7 @@ public class DTO_DocGia {
         this.diaChi = diaChi;
     }
 
-    // Constructor 2: Dùng cho GUI (Lúc nhập liệu Thêm mới)
+    // 4. Constructor cho GUI Thêm cũ (Giữ nguyên để không lỗi form Thêm)
     public DTO_DocGia(String maDocGia, String tenDocGia, String lop, String diaChi, String sdt) {
         this.maDocGia = maDocGia;
         this.tenDocGia = tenDocGia;
@@ -45,18 +57,17 @@ public class DTO_DocGia {
     public String getGioiTinh() { return gioiTinh; }
     public void setGioiTinh(String gioiTinh) { this.gioiTinh = gioiTinh; }
 
-    // --- BỔ SUNG GETTER/SETTER CHO LỚP ---
     public String getLop() { return lop; }
     public void setLop(String lop) { this.lop = lop; }
 
-    // --- BỔ SUNG ALIAS CHO SỐ ĐIỆN THOẠI (Để khớp với GUI) ---
+    public String getDiaChi() { return diaChi; }
+    public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
+
+    // --- XỬ LÝ ĐỒNG BỘ SĐT (Alias) ---
     public String getSdt() { return sdt; }
     public void setSdt(String sdt) { this.sdt = sdt; }
     
-    // Hàm này giúp GUI gọi getSoDienThoai() không bị lỗi
+    // Alias giúp GUI và DAL gọi getSoDienThoai() không bị lỗi
     public String getSoDienThoai() { return sdt; } 
     public void setSoDienThoai(String sdt) { this.sdt = sdt; }
-
-    public String getDiaChi() { return diaChi; }
-    public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
 }

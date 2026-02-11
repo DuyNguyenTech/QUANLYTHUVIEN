@@ -1,5 +1,7 @@
 package SACH;
 
+import com.formdev.flatlaf.FlatClientProperties;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -30,37 +32,31 @@ public class GUI_QuanLySach extends JPanel {
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(bgColor);
+        setBorder(new EmptyBorder(20, 20, 20, 20)); // Căn lề form thoáng như các form trước
 
         // --- 1. HEADER (TIÊU ĐỀ & TÌM KIẾM) ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(Color.WHITE);
-        pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
-        // Tạo đường kẻ dưới nhẹ cho header
-        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-            new EmptyBorder(15, 20, 15, 20)
-        ));
+        pnlHeader.setBackground(bgColor);
+        pnlHeader.setBorder(new EmptyBorder(0, 0, 15, 0));
 
-        JLabel lblTitle = new JLabel("QUẢN LÝ KHO SÁCH", SwingConstants.CENTER);
+        JLabel lblTitle = new JLabel("QUẢN LÝ SÁCH");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(mainColor);
         
-        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
-        pnlSearch.setBackground(Color.WHITE);
+        JPanel pnlSearch = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        pnlSearch.setBackground(bgColor);
         
         cboLoc = new JComboBox<>(new String[]{"Tất cả", "Mã sách", "Tên sách", "Tác giả"});
-        cboLoc.setPreferredSize(new Dimension(130, 40));
+        cboLoc.setPreferredSize(new Dimension(130, 42));
         cboLoc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        cboLoc.setBackground(Color.WHITE);
+        cboLoc.putClientProperty(FlatClientProperties.STYLE, "arc: 10"); // Bo góc Cbo
         
         txtTimKiem = new JTextField();
-        txtTimKiem.setPreferredSize(new Dimension(350, 40));
-        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        // Bo viền cho ô tìm kiếm
-        txtTimKiem.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            new EmptyBorder(0, 10, 0, 10)
-        ));
+        txtTimKiem.setPreferredSize(new Dimension(300, 42));
+        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        // Style FlatLaf: Bo tròn như viên thuốc, có placeholder text
+        txtTimKiem.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Nhập từ khóa tìm kiếm...");
+        txtTimKiem.putClientProperty(FlatClientProperties.STYLE, "arc: 999; borderWidth: 1; borderColor: #cccccc; focusedBorderColor: #1877F2; margin: 0, 15, 0, 15");
         
         JButton btnTim = createButton("Tìm kiếm", mainColor, Color.WHITE);
         JButton btnLamMoi = createButton("Làm Mới", new Color(108, 117, 125), Color.WHITE);
@@ -70,19 +66,18 @@ public class GUI_QuanLySach extends JPanel {
         pnlSearch.add(btnTim);
         pnlSearch.add(btnLamMoi);
 
-        JPanel pnlTop = new JPanel(new BorderLayout());
-        pnlTop.setBackground(Color.WHITE);
-        pnlTop.add(lblTitle, BorderLayout.NORTH);
-        pnlTop.add(pnlSearch, BorderLayout.SOUTH);
+        pnlHeader.add(lblTitle, BorderLayout.WEST);
+        pnlHeader.add(pnlSearch, BorderLayout.EAST);
         
-        add(pnlTop, BorderLayout.NORTH);
+        add(pnlHeader, BorderLayout.NORTH);
 
-        // --- 2. TABLE (BẢNG DỮ LIỆU) ---
-        JPanel pnlTable = new JPanel(new BorderLayout());
-        pnlTable.setBorder(new EmptyBorder(20, 20, 20, 20));
-        pnlTable.setBackground(bgColor);
+        // --- 2. TABLE (BẢNG DỮ LIỆU TRONG THẺ CARD) ---
+        JPanel pnlTableCard = new JPanel(new BorderLayout());
+        pnlTableCard.setBackground(Color.WHITE);
+        pnlTableCard.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
+        pnlTableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        String[] cols = {"Mã Cuốn", "Mã Sách", "Tên Sách", "Thể Loại", "Tác Giả", "Năm XB", "Giá Tiền", "Tình Trạng"};
+        String[] cols = {"Mã Cuốn", "Mã Sách", "Tên Sách", "Thể Loại", "Tác Giả", "Năm Xuất Bản", "Giá Tiền", "Tình Trạng"};
         modelSach = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -98,11 +93,11 @@ public class GUI_QuanLySach extends JPanel {
 
         // Style Header
         JTableHeader header = tableSach.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(Color.WHITE);
-        header.setForeground(mainColor);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor)); // Kẻ dưới đậm màu xanh
-        header.setPreferredSize(new Dimension(0, 40));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        header.setBackground(new Color(248, 249, 250));
+        header.setForeground(new Color(50, 50, 50));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220))); 
+        header.setPreferredSize(new Dimension(0, 45));
 
         // Renderer chung: Căn giữa và tô màu nền so le (Striped Rows)
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
@@ -110,7 +105,6 @@ public class GUI_QuanLySach extends JPanel {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
-                    // Dòng chẵn trắng, dòng lẻ xám nhạt
                     c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
                 }
                 setBorder(new EmptyBorder(0, 5, 0, 5));
@@ -121,8 +115,22 @@ public class GUI_QuanLySach extends JPanel {
         
         // Áp dụng renderer cho các cột
         for (int i = 0; i < tableSach.getColumnCount(); i++) {
-            tableSach.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            if(i != 2) { // Ngoại trừ cột Tên sách (sẽ căn trái)
+                tableSach.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+            }
         }
+        
+        // Căn trái cho Tên sách
+        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 250, 250));
+                setBorder(new EmptyBorder(0, 10, 0, 0));
+                return c;
+            }
+        };
+        tableSach.getColumnModel().getColumn(2).setCellRenderer(leftRenderer);
         
         // Renderer riêng cho cột Tình trạng (Cột cuối - index 7) để tô màu chữ
         tableSach.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
@@ -151,16 +159,17 @@ public class GUI_QuanLySach extends JPanel {
         
         JScrollPane sc = new JScrollPane(tableSach);
         sc.getViewport().setBackground(Color.WHITE);
-        sc.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
-        pnlTable.add(sc, BorderLayout.CENTER);
-        add(pnlTable, BorderLayout.CENTER);
+        sc.setBorder(BorderFactory.createEmptyBorder()); // Xóa viền đen mặc định
+        pnlTableCard.add(sc, BorderLayout.CENTER);
+        
+        add(pnlTableCard, BorderLayout.CENTER);
 
         // --- 3. FOOTER (BUTTONS) ---
-        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
+        JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
         pnlFooter.setBackground(bgColor);
 
         JButton btnThem = createButton("Thêm Sách", new Color(40, 167, 69), Color.WHITE);
-        JButton btnSua = createButton("Sửa Thông Tin", new Color(255, 193, 7), Color.WHITE);
+        JButton btnSua = createButton("Sửa Sách", new Color(255, 193, 7), Color.WHITE); 
         JButton btnChiTiet = createButton("Xem Chi Tiết", new Color(23, 162, 184), Color.WHITE);
         JButton btnXoa = createButton("Xóa Sách", new Color(220, 53, 69), Color.WHITE);
         
@@ -172,7 +181,6 @@ public class GUI_QuanLySach extends JPanel {
         add(pnlFooter, BorderLayout.SOUTH);
 
         // --- EVENTS ---
-        
         txtTimKiem.addActionListener(e -> xuLyTimKiem());
         btnTim.addActionListener(e -> xuLyTimKiem());
         
@@ -257,7 +265,10 @@ public class GUI_QuanLySach extends JPanel {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setPreferredSize(new Dimension(160, 45)); // Nút to hơn chút
+        btn.setPreferredSize(new Dimension(150, 42)); // Nút thon gọn lại một xíu
+        
+        // [QUAN TRỌNG] Thêm bo góc cho các nút
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
         return btn;
     }
 }

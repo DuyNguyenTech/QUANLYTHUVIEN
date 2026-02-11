@@ -1,8 +1,8 @@
 package DOCGIA;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -15,6 +15,7 @@ public class GUI_DialogThemDocGia extends JDialog {
     
     // Màu chủ đạo
     private Color mainColor = new Color(50, 115, 220);
+    private Color bgColor = new Color(245, 248, 253);
 
     public GUI_DialogThemDocGia(GUI_QuanLyDocGia parent) {
         this.parentGUI = parent;
@@ -31,44 +32,48 @@ public class GUI_DialogThemDocGia extends JDialog {
 
     private void initUI() {
         setTitle(docGiaEdit == null ? "THÊM ĐỘC GIẢ" : "CẬP NHẬT ĐỘC GIẢ");
-        setSize(500, 520); // Tăng chiều cao một chút cho thoáng
+        setSize(550, 580); // Nới rộng kích thước cho thoáng
         setLocationRelativeTo(null);
         setModal(true);
         setLayout(new BorderLayout());
         setResizable(false);
+        getContentPane().setBackground(bgColor);
 
         // 1. HEADER
-        String title = docGiaEdit == null ? "THÊM ĐỘC GIẢ MỚI" : "CẬP NHẬT THÔNG TIN";
-        Color headerColor = docGiaEdit == null ? mainColor : new Color(255, 152, 0); // Xanh khi thêm, Cam khi sửa
+        String titleText = docGiaEdit == null ? "THÊM ĐỘC GIẢ MỚI" : "CẬP NHẬT THÔNG TIN";
+        Color headerColor = docGiaEdit == null ? mainColor : new Color(255, 152, 0); 
 
         JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.CENTER));
         pnlHeader.setBackground(headerColor);
-        pnlHeader.setBorder(new EmptyBorder(10, 0, 10, 0));
+        pnlHeader.setBorder(new EmptyBorder(15, 0, 15, 0));
         
-        JLabel lblHeader = new JLabel(title.toUpperCase());
-        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        JLabel lblHeader = new JLabel(titleText.toUpperCase());
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblHeader.setForeground(Color.WHITE);
         pnlHeader.add(lblHeader);
         add(pnlHeader, BorderLayout.NORTH);
 
-        // 2. CONTENT (INPUT FORM)
-        JPanel pnlContent = new JPanel(new GridBagLayout());
-        pnlContent.setBackground(Color.WHITE);
-        pnlContent.setBorder(BorderFactory.createCompoundBorder(
-            new EmptyBorder(15, 15, 15, 15),
-            BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                "Thông tin chi tiết",
-                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
-                new Font("Segoe UI", Font.BOLD, 14), headerColor
-            )
-        ));
+        // 2. CONTENT (Bọc trong Card trắng bo góc)
+        JPanel pnlWrapper = new JPanel(new BorderLayout());
+        pnlWrapper.setBackground(bgColor);
+        pnlWrapper.setBorder(new EmptyBorder(25, 25, 15, 25));
+
+        JPanel pnlForm = new JPanel(new GridBagLayout());
+        pnlForm.setBackground(Color.WHITE);
+        // Bo góc Card 20px
+        pnlForm.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
+        
+        // Tiêu đề nội bộ
+        JLabel lblFormTitle = new JLabel("Thông Tin Chi Tiết");
+        lblFormTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        lblFormTitle.setForeground(headerColor);
+        lblFormTitle.setBorder(new EmptyBorder(20, 20, 5, 0));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(12, 20, 12, 20); // Dãn cách dòng rộng rãi
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        // Khởi tạo các Textfield với style đẹp
+        // Khởi tạo các Textfield (KHÔNG CÓ CHỮ MỜ)
         txtMa = createTextField();
         txtTen = createTextField();
         txtLop = createTextField();
@@ -76,21 +81,29 @@ public class GUI_DialogThemDocGia extends JDialog {
         txtSDT = createTextField();
 
         int row = 0;
-        addInputRow(pnlContent, gbc, row++, "Mã độc giả:", txtMa);
-        addInputRow(pnlContent, gbc, row++, "Tên độc giả:", txtTen);
-        addInputRow(pnlContent, gbc, row++, "Lớp:", txtLop);
-        addInputRow(pnlContent, gbc, row++, "Địa chỉ:", txtDiaChi);
-        addInputRow(pnlContent, gbc, row++, "Số điện thoại:", txtSDT);
+        addInputRow(pnlForm, gbc, row++, "Mã độc giả:", txtMa);
+        addInputRow(pnlForm, gbc, row++, "Tên độc giả:", txtTen);
+        addInputRow(pnlForm, gbc, row++, "Lớp học:", txtLop);
+        addInputRow(pnlForm, gbc, row++, "Địa chỉ:", txtDiaChi);
+        addInputRow(pnlForm, gbc, row++, "Số điện thoại:", txtSDT);
 
-        add(pnlContent, BorderLayout.CENTER);
+        // Panel chứa tiêu đề + form
+        JPanel pnlCardContainer = new JPanel(new BorderLayout());
+        pnlCardContainer.setBackground(Color.WHITE);
+        pnlCardContainer.putClientProperty(FlatClientProperties.STYLE, "arc: 20");
+        pnlCardContainer.add(lblFormTitle, BorderLayout.NORTH);
+        pnlCardContainer.add(pnlForm, BorderLayout.CENTER);
+
+        pnlWrapper.add(pnlCardContainer, BorderLayout.CENTER);
+        add(pnlWrapper, BorderLayout.CENTER);
 
         // 3. BOTTOM BUTTONS
-        JPanel pnlButton = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
-        pnlButton.setBackground(Color.WHITE);
-        pnlButton.setBorder(new EmptyBorder(0, 0, 10, 0));
+        JPanel pnlButton = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+        pnlButton.setBackground(bgColor);
+        pnlButton.setBorder(new EmptyBorder(0, 0, 10, 5));
         
         JButton btnLuu = createButton(docGiaEdit == null ? "Lưu Lại" : "Cập Nhật", headerColor);
-        JButton btnHuy = createButton("Đóng", new Color(220, 53, 69));
+        JButton btnHuy = createButton("Hủy Bỏ", new Color(220, 53, 69));
 
         if (docGiaEdit == null) {
             JButton btnLamMoi = createButton("Làm Mới", new Color(23, 162, 184));
@@ -105,7 +118,6 @@ public class GUI_DialogThemDocGia extends JDialog {
         pnlButton.add(btnHuy);
         add(pnlButton, BorderLayout.SOUTH);
 
-        // --- Kích hoạt phím Enter để chuyển ô ---
         setupEnterNavigation();
     }
 
@@ -113,8 +125,9 @@ public class GUI_DialogThemDocGia extends JDialog {
         gbc.gridx = 0; gbc.gridy = row; 
         gbc.weightx = 0;
         JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13)); // Label đậm nhẹ
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lbl.setForeground(new Color(80, 80, 80));
+        lbl.setPreferredSize(new Dimension(110, 30)); // Cố định nhãn cho thẳng hàng
         p.add(lbl, gbc);
 
         gbc.gridx = 1; gbc.gridy = row; 
@@ -122,38 +135,32 @@ public class GUI_DialogThemDocGia extends JDialog {
         p.add(txt, gbc);
     }
 
-    // Hàm tạo TextField chuẩn style
     private JTextField createTextField() {
         JTextField txt = new JTextField();
-        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txt.setPreferredSize(new Dimension(220, 35));
-        // Padding bên trong
-        txt.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)), 
-            BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txt.setPreferredSize(new Dimension(280, 42));
+        // Bo góc & Viền chuẩn FlatLaf - KHÔNG CHỮ MỜ
+        txt.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderColor: #cccccc; focusedBorderColor: #1877F2; borderWidth: 1");
         return txt;
     }
 
-    // Hàm tạo Button chuẩn style
     private JButton createButton(String text, Color bg) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
-        btn.setPreferredSize(new Dimension(120, 40));
+        btn.setPreferredSize(new Dimension(130, 45));
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
         return btn;
     }
 
-    // Logic điều hướng Enter
     private void setupEnterNavigation() {
         JTextField[] fields = {txtMa, txtTen, txtLop, txtDiaChi, txtSDT};
         for (JTextField tf : fields) {
-            tf.addActionListener(e -> tf.transferFocus()); // Tự động nhảy sang component kế tiếp
+            tf.addActionListener(e -> tf.transferFocus());
         }
-        // Riêng ô cuối cùng (SĐT) nhấn Enter sẽ gọi hàm Lưu
         txtSDT.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -165,7 +172,8 @@ public class GUI_DialogThemDocGia extends JDialog {
     private void fillData() {
         txtMa.setText(docGiaEdit.getMaDocGia());
         txtMa.setEditable(false);
-        txtMa.setBackground(new Color(245, 245, 245)); // Xám nhẹ để biết là readonly
+        txtMa.setBackground(new Color(240, 240, 240));
+        txtMa.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
         txtTen.setText(docGiaEdit.getTenDocGia());
         txtLop.setText(docGiaEdit.getLop());
         txtDiaChi.setText(docGiaEdit.getDiaChi());
@@ -182,21 +190,19 @@ public class GUI_DialogThemDocGia extends JDialog {
     }
 
     private void xuLyLuu() {
-        // 1. Validate Rỗng
         if (txtMa.getText().trim().isEmpty() || 
             txtTen.getText().trim().isEmpty() || 
             txtLop.getText().trim().isEmpty() || 
             txtDiaChi.getText().trim().isEmpty() || 
             txtSDT.getText().trim().isEmpty()) {
             
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tất cả thông tin!");
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ tất cả thông tin!", "Nhắc nhở", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // 2. Validate Số điện thoại (10 chữ số)
         String sdt = txtSDT.getText().trim();
         if (!sdt.matches("\\d{10}")) { 
-            JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ (Phải đúng 10 chữ số)!");
+            JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ (Phải bao gồm đúng 10 chữ số)!", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             txtSDT.requestFocus();
             return;
         }
@@ -211,22 +217,20 @@ public class GUI_DialogThemDocGia extends JDialog {
         DAL_DocGia dal = new DAL_DocGia();
 
         if (docGiaEdit == null) {
-            // --- TRƯỜNG HỢP THÊM MỚI ---
             if (dal.add(dg)) {
                 JOptionPane.showMessageDialog(this, "Thêm độc giả thành công!");
                 parentGUI.loadData(); 
                 clearForm(); 
             } else {
-                JOptionPane.showMessageDialog(this, "Thêm thất bại (Mã độc giả có thể đã tồn tại)!");
+                JOptionPane.showMessageDialog(this, "Thêm thất bại (Mã độc giả có thể đã tồn tại)!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            // --- TRƯỜNG HỢP CẬP NHẬT ---
             if (dal.update(dg)) {
                 JOptionPane.showMessageDialog(this, "Cập nhật thông tin thành công!");
                 parentGUI.loadData();
-                dispose(); // Đóng form
+                dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Cập nhật thất bại!");
+                JOptionPane.showMessageDialog(this, "Cập nhật thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

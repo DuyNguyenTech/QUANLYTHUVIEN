@@ -1,8 +1,8 @@
 package SACH;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class GUI_QuanLyTheLoai extends JPanel {
 
-    // Màu sắc chủ đạo (Đồng bộ với GUI_QuanLySach)
+    // Màu sắc chủ đạo (Đồng bộ toàn hệ thống)
     private Color mainColor = new Color(50, 115, 220);
     private Color bgColor = new Color(245, 248, 253);
 
@@ -32,30 +32,26 @@ public class GUI_QuanLyTheLoai extends JPanel {
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(bgColor);
+        setBorder(new EmptyBorder(20, 20, 20, 20)); // Căn lề form thoáng
 
         // --- 1. HEADER ---
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(Color.WHITE);
-        pnlHeader.setBorder(new EmptyBorder(15, 20, 15, 20));
-        // Kẻ đường line dưới header
-        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)),
-            new EmptyBorder(15, 20, 15, 20)
-        ));
+        pnlHeader.setBackground(bgColor);
+        pnlHeader.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         JLabel lblTitle = new JLabel("QUẢN LÝ THỂ LOẠI SÁCH");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(mainColor);
         pnlHeader.add(lblTitle, BorderLayout.WEST);
         
         add(pnlHeader, BorderLayout.NORTH);
 
-        // --- 2. CENTER (BẢNG DỮ LIỆU) ---
-        JPanel pnlCenter = new JPanel(new BorderLayout());
-        pnlCenter.setBackground(bgColor);
-        pnlCenter.setBorder(new EmptyBorder(20, 20, 20, 20));
+        // --- 2. CENTER (BẢNG DỮ LIỆU TRONG THẺ CARD) ---
+        JPanel pnlTableCard = new JPanel(new BorderLayout());
+        pnlTableCard.setBackground(Color.WHITE);
+        pnlTableCard.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
+        pnlTableCard.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Setup Bảng
         String[] cols = {"Mã Thể Loại", "Tên Thể Loại"};
         model = new DefaultTableModel(cols, 0) {
             @Override
@@ -73,11 +69,11 @@ public class GUI_QuanLyTheLoai extends JPanel {
 
         // Header Bảng
         JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(Color.WHITE);
-        header.setForeground(mainColor);
-        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, mainColor));
-        header.setPreferredSize(new Dimension(0, 40));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        header.setBackground(new Color(248, 249, 250));
+        header.setForeground(new Color(50, 50, 50));
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
+        header.setPreferredSize(new Dimension(0, 45));
 
         // Renderer chung (Căn giữa & Striped Rows)
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
@@ -93,51 +89,46 @@ public class GUI_QuanLyTheLoai extends JPanel {
         };
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         
-        // Áp dụng renderer
         table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
         table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(Color.WHITE);
         
-        pnlCenter.add(scrollPane, BorderLayout.CENTER);
-        add(pnlCenter, BorderLayout.CENTER);
+        pnlTableCard.add(scrollPane, BorderLayout.CENTER);
+        add(pnlTableCard, BorderLayout.CENTER);
 
         // --- 3. BOTTOM (INPUT + BUTTONS) ---
-        JPanel pnlBottom = new JPanel(new BorderLayout());
+        JPanel pnlBottom = new JPanel(new BorderLayout(0, 15));
         pnlBottom.setBackground(bgColor);
-        pnlBottom.setBorder(new EmptyBorder(0, 20, 20, 20));
+        pnlBottom.setBorder(new EmptyBorder(20, 0, 0, 0));
         
-        // 3a. Panel Input (Nền trắng, bo góc)
-        JPanel pnlInput = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 15));
+        // 3a. Panel Input (Nền trắng, bo góc 20px)
+        JPanel pnlInput = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
         pnlInput.setBackground(Color.WHITE);
-        pnlInput.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220)),
-            new EmptyBorder(10, 10, 10, 10)
-        ));
+        pnlInput.putClientProperty(FlatClientProperties.STYLE, "arc: 20; border: 1,1,1,1, #E0E0E0");
 
         // Mã thể loại
         pnlInput.add(createLabel("Mã thể loại:"));
-        txtMa = createTextField();
+        txtMa = createTextField(); // Đã bỏ chữ mờ hoàn toàn
         pnlInput.add(txtMa);
 
         // Tên thể loại
         pnlInput.add(createLabel("Tên thể loại:"));
-        txtTen = createTextField();
+        txtTen = createTextField(); // Đã bỏ chữ mờ hoàn toàn
         pnlInput.add(txtTen);
 
-        pnlBottom.add(pnlInput, BorderLayout.CENTER);
+        pnlBottom.add(pnlInput, BorderLayout.NORTH);
 
-        // 3b. Panel Buttons (Dưới cùng)
-        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
+     // 3b. Panel Buttons - [ĐÃ SỬA: Thay FlowLayout.RIGHT bằng FlowLayout.CENTER để căn giữa]
+        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         pnlButtons.setBackground(bgColor);
 
-        // [MÀU SẮC ĐỒNG BỘ VỚI CÁC MODULE KHÁC]
-        btnThem = createButton("Thêm Mới", new Color(40, 167, 69));   // Xanh lá
-        btnSua = createButton("Cập Nhật", new Color(255, 193, 7));    // Vàng cam
-        btnXoa = createButton("Xóa Bỏ", new Color(220, 53, 69));      // Đỏ
-        btnLamMoi = createButton("Làm Mới", new Color(23, 162, 184)); // Xanh Cyan
+        btnThem = createButton("Thêm Mới", new Color(40, 167, 69), Color.WHITE);
+        btnSua = createButton("Cập Nhật", new Color(255, 193, 7), Color.WHITE); 
+        btnXoa = createButton("Xóa Bỏ", new Color(220, 53, 69), Color.WHITE);
+        btnLamMoi = createButton("Làm Mới", new Color(23, 162, 184), Color.WHITE);
 
         pnlButtons.add(btnThem);
         pnlButtons.add(btnSua);
@@ -148,48 +139,45 @@ public class GUI_QuanLyTheLoai extends JPanel {
         add(pnlBottom, BorderLayout.SOUTH);
 
         // --- EVENTS ---
-        
-        // Click bảng -> Đổ dữ liệu lên textfield
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
                 if (row >= 0) {
                     txtMa.setText(table.getValueAt(row, 0).toString());
                     txtTen.setText(table.getValueAt(row, 1).toString());
-                    txtMa.setEditable(false); // Khóa mã không cho sửa
-                    txtMa.setBackground(new Color(245, 245, 245));
+                    txtMa.setEditable(false); 
+                    txtMa.setBackground(new Color(240, 240, 240));
+                    txtMa.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
                 }
             }
         });
 
-        // Nút Thêm
         btnThem.addActionListener(e -> {
             if (validateInput()) {
                 if (dal.checkExist(txtMa.getText().trim())) {
-                    JOptionPane.showMessageDialog(this, "Mã thể loại đã tồn tại!");
+                    JOptionPane.showMessageDialog(this, "Mã thể loại này đã tồn tại!");
                     return;
                 }
                 DTO_TheLoai tl = new DTO_TheLoai(txtMa.getText().trim(), txtTen.getText().trim());
                 if (dal.add(tl)) {
-                    JOptionPane.showMessageDialog(this, "Thêm thành công!");
+                    JOptionPane.showMessageDialog(this, "Thêm thể loại thành công!");
                     loadData();
                     clearForm();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Thêm thất bại!");
+                    JOptionPane.showMessageDialog(this, "Lỗi khi thêm thể loại!");
                 }
             }
         });
 
-        // Nút Sửa
         btnSua.addActionListener(e -> {
             if (table.getSelectedRow() == -1) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn thể loại cần sửa!");
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn thể loại trong bảng!");
                 return;
             }
             if (validateInput()) {
                 DTO_TheLoai tl = new DTO_TheLoai(txtMa.getText().trim(), txtTen.getText().trim());
                 if (dal.update(tl)) {
-                    JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+                    JOptionPane.showMessageDialog(this, "Cập nhật dữ liệu thành công!");
                     loadData();
                     clearForm();
                 } else {
@@ -198,25 +186,23 @@ public class GUI_QuanLyTheLoai extends JPanel {
             }
         });
 
-        // Nút Xóa
         btnXoa.addActionListener(e -> {
             if (table.getSelectedRow() == -1) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn thể loại cần xóa!");
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng cần xóa!");
                 return;
             }
             String ma = txtMa.getText();
-            if (JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn xóa thể loại: " + ma + "?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if (JOptionPane.showConfirmDialog(this, "Bạn chắc chắn muốn xóa thể loại: " + ma + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 if (dal.delete(ma)) {
-                    JOptionPane.showMessageDialog(this, "Đã xóa!");
+                    JOptionPane.showMessageDialog(this, "Đã xóa thành công!");
                     loadData();
                     clearForm();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Xóa thất bại! (Có thể sách đang dùng thể loại này)");
+                    JOptionPane.showMessageDialog(this, "Xóa thất bại! Thể loại này có thể đang chứa sách.");
                 }
             }
         });
 
-        // Nút Làm mới
         btnLamMoi.addActionListener(e -> clearForm());
     }
 
@@ -233,13 +219,14 @@ public class GUI_QuanLyTheLoai extends JPanel {
         txtTen.setText("");
         txtMa.setEditable(true);
         txtMa.setBackground(Color.WHITE);
+        txtMa.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderColor: #cccccc; focusedBorderColor: #1877F2; borderWidth: 1");
         table.clearSelection();
         txtMa.requestFocus();
     }
 
     private boolean validateInput() {
         if (txtMa.getText().trim().isEmpty() || txtTen.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ Mã và Tên thể loại!");
+            JOptionPane.showMessageDialog(this, "Vui lòng không để trống Mã hoặc Tên!");
             return false;
         }
         return true;
@@ -249,30 +236,28 @@ public class GUI_QuanLyTheLoai extends JPanel {
     private JLabel createLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lbl.setForeground(new Color(50, 50, 50));
+        lbl.setForeground(new Color(70, 70, 70));
         return lbl;
     }
 
     private JTextField createTextField() {
         JTextField txt = new JTextField();
-        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txt.setPreferredSize(new Dimension(200, 35));
-        // Bo viền và padding
-        txt.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            new EmptyBorder(5, 8, 5, 8)
-        ));
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        txt.setPreferredSize(new Dimension(250, 40));
+        // Đã bỏ FlatClientProperties.PLACEHOLDER_TEXT
+        txt.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderColor: #cccccc; focusedBorderColor: #1877F2; borderWidth: 1");
         return txt;
     }
 
-    private JButton createButton(String text, Color bg) {
+    private JButton createButton(String text, Color bg, Color fg) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(fg);
         btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(150, 45)); // Kích thước cố định giống các module khác
+        btn.setPreferredSize(new Dimension(150, 42)); 
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 10; borderWidth: 0");
         return btn;
     }
 }

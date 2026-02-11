@@ -1,8 +1,8 @@
 package THUTHU;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 
@@ -12,47 +12,48 @@ public class GUI_DialogChiTietThuThu extends JDialog {
     private JTextField txtMa, txtTen, txtDiaChi, txtSDT, txtUser, txtPass, txtNgaySinh, txtGioiTinh, txtQuyen;
     private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
     
-    // Màu chủ đạo
+    // Màu chủ đạo đồng bộ
     private Color mainColor = new Color(50, 115, 220);
+    private Color bgColor = new Color(245, 248, 253);
 
-    public GUI_DialogChiTietThuThu(Component parent, DTO_ThuThu tt) {
+    public GUI_DialogChiTietThuThu(Window parent, DTO_ThuThu tt) {
+        super(parent, ModalityType.APPLICATION_MODAL);
         this.nhanVien = tt;
         initUI();
         fillData();
     }
 
     private void initUI() {
-        setTitle("THÔNG TIN CHI TIẾT NHÂN VIÊN");
-        setSize(850, 550);
+        setTitle("HỒ SƠ CHI TIẾT THỦ THƯ");
+        setSize(900, 600);
         setLocationRelativeTo(null);
-        setModal(true);
         setLayout(new BorderLayout());
+        getContentPane().setBackground(bgColor);
         setResizable(false);
 
         // --- 1. HEADER ---
         JPanel pnlHeader = new JPanel(new FlowLayout(FlowLayout.CENTER));
         pnlHeader.setBackground(mainColor);
-        pnlHeader.setBorder(new EmptyBorder(10, 0, 10, 0));
+        pnlHeader.setBorder(new EmptyBorder(15, 0, 15, 0));
         
-        JLabel lblTitle = new JLabel("HỒ SƠ NHÂN VIÊN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        JLabel lblTitle = new JLabel("HỒ SƠ THỦ THƯ");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitle.setForeground(Color.WHITE);
         pnlHeader.add(lblTitle);
         add(pnlHeader, BorderLayout.NORTH);
 
         // --- 2. CONTENT ---
-        JPanel pnlContent = new JPanel(new GridLayout(1, 2, 20, 0));
-        pnlContent.setBackground(new Color(245, 248, 253));
-        pnlContent.setBorder(new EmptyBorder(20, 20, 20, 20));
+        JPanel pnlContent = new JPanel(new GridLayout(1, 2, 25, 0));
+        pnlContent.setBackground(bgColor);
+        pnlContent.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         // -- Cột Trái: Thông tin cá nhân --
-        JPanel pnlLeft = new JPanel(new GridBagLayout());
-        pnlLeft.setBackground(Color.WHITE);
-        pnlLeft.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)), "Thông tin cá nhân",
-            TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
-            new Font("Segoe UI", Font.BOLD, 14), mainColor));
-        
+        JPanel pnlLeft = createInfoSection("Thông tin cá nhân");
+        JPanel innerLeft = (JPanel) pnlLeft.getClientProperty("innerPanel");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
         txtMa = createReadOnlyField();
         txtTen = createReadOnlyField();
         txtNgaySinh = createReadOnlyField();
@@ -60,65 +61,70 @@ public class GUI_DialogChiTietThuThu extends JDialog {
         txtDiaChi = createReadOnlyField();
         txtSDT = createReadOnlyField();
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
         int row = 0;
-        addComp(pnlLeft, gbc, row++, "Mã NV:", txtMa);
-        addComp(pnlLeft, gbc, row++, "Họ Tên:", txtTen);
-        addComp(pnlLeft, gbc, row++, "Ngày Sinh:", txtNgaySinh);
-        addComp(pnlLeft, gbc, row++, "Giới Tính:", txtGioiTinh);
-        addComp(pnlLeft, gbc, row++, "Địa Chỉ:", txtDiaChi);
-        addComp(pnlLeft, gbc, row++, "Số Điện Thoại:", txtSDT);
-        
-        // Đẩy lên trên
-        gbc.gridy = row; gbc.weighty = 1.0;
-        pnlLeft.add(new JLabel(), gbc);
+        addComp(innerLeft, gbc, row++, "Mã Thủ Thư", txtMa);
+        addComp(innerLeft, gbc, row++, "Họ Và Tên", txtTen);
+        addComp(innerLeft, gbc, row++, "Ngày Sinh", txtNgaySinh);
+        addComp(innerLeft, gbc, row++, "Giới Tính", txtGioiTinh);
+        addComp(innerLeft, gbc, row++, "Địa Chỉ", txtDiaChi);
+        addComp(innerLeft, gbc, row++, "Số Điện Thoại", txtSDT);
 
         // -- Cột Phải: Tài khoản hệ thống --
-        JPanel pnlRight = new JPanel(new GridBagLayout());
-        pnlRight.setBackground(Color.WHITE);
-        pnlRight.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)), "Thông tin tài khoản",
-            TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
-            new Font("Segoe UI", Font.BOLD, 14), mainColor));
+        JPanel pnlRight = createInfoSection("Thông tin tài khoản");
+        JPanel innerRight = (JPanel) pnlRight.getClientProperty("innerPanel");
         
         txtUser = createReadOnlyField();
         txtPass = createReadOnlyField();
         txtQuyen = createReadOnlyField();
-        txtQuyen.setFont(new Font("Segoe UI", Font.BOLD, 14)); // Đậm để nhấn mạnh quyền
+        txtQuyen.setFont(new Font("Segoe UI", Font.BOLD, 14));
         
         row = 0;
-        addComp(pnlRight, gbc, row++, "Username:", txtUser);
-        addComp(pnlRight, gbc, row++, "Password:", txtPass);
-        addComp(pnlRight, gbc, row++, "Quyền Hạn:", txtQuyen);
-        
-        // Đẩy lên trên
-        gbc.gridy = row; gbc.weighty = 1.0;
-        pnlRight.add(new JLabel(), gbc);
+        addComp(innerRight, gbc, row++, "Tên Đăng Nhập", txtUser);
+        addComp(innerRight, gbc, row++, "Mật Khẩu", txtPass);
+        addComp(innerRight, gbc, row++, "Quyền Hạn", txtQuyen);
 
         pnlContent.add(pnlLeft);
         pnlContent.add(pnlRight);
         add(pnlContent, BorderLayout.CENTER);
 
         // --- 3. BOTTOM ---
-        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        pnlBot.setBackground(new Color(245, 248, 253));
-        pnlBot.setBorder(new EmptyBorder(0, 0, 15, 0));
+        JPanel pnlBot = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
+        pnlBot.setBackground(bgColor);
         
         JButton btnThoat = new JButton("Đóng");
-        btnThoat.setPreferredSize(new Dimension(150, 45));
+        btnThoat.setPreferredSize(new Dimension(150, 42));
         btnThoat.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnThoat.setBackground(new Color(108, 117, 125)); // Màu Xám
+        btnThoat.setBackground(new Color(108, 117, 125));
         btnThoat.setForeground(Color.WHITE);
         btnThoat.setFocusPainted(false);
         btnThoat.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnThoat.putClientProperty("FlatLaf.style", "arc: 10; borderWidth: 0");
         
         btnThoat.addActionListener(e -> dispose());
         
         pnlBot.add(btnThoat);
         add(pnlBot, BorderLayout.SOUTH);
+    }
+
+    private JPanel createInfoSection(String title) {
+        JPanel container = new JPanel(new BorderLayout());
+        container.setBackground(Color.WHITE);
+        container.putClientProperty("FlatLaf.style", "arc: 20; border: 1,1,1,1, #E0E0E0");
+
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setForeground(mainColor);
+        lblTitle.setBorder(new EmptyBorder(15, 20, 10, 20));
+        
+        JPanel innerGrid = new JPanel(new GridBagLayout());
+        innerGrid.setOpaque(false);
+        innerGrid.setBorder(new EmptyBorder(0, 10, 15, 10));
+        
+        container.add(lblTitle, BorderLayout.NORTH);
+        container.add(innerGrid, BorderLayout.CENTER);
+        container.putClientProperty("innerPanel", innerGrid);
+        
+        return container;
     }
 
     private void fillData() {
@@ -129,38 +135,38 @@ public class GUI_DialogChiTietThuThu extends JDialog {
         txtGioiTinh.setText(nhanVien.getGioiTinh());
         txtDiaChi.setText(nhanVien.getDiaChi());
         txtSDT.setText(nhanVien.getSoDienThoai());
-        
         txtUser.setText(nhanVien.getTenDangNhap());
-        txtPass.setText(nhanVien.getMatKhau());
+        txtPass.setText("********"); // Luôn ẩn pass ở chế độ xem
         
         if (nhanVien.getPhanQuyen() == 1) {
-            txtQuyen.setText("Admin (Quản trị hệ thống)");
-            txtQuyen.setForeground(new Color(220, 53, 69)); // Đỏ
+            txtQuyen.setText("Quản trị viên");
+            txtQuyen.setForeground(new Color(220, 53, 69)); 
         } else {
-            txtQuyen.setText("Thủ thư (Nhân viên)");
-            txtQuyen.setForeground(new Color(40, 167, 69)); // Xanh lá
+            txtQuyen.setText("Thủ thư");
+            txtQuyen.setForeground(new Color(40, 167, 69)); 
         }
     }
 
     private JTextField createReadOnlyField() {
         JTextField t = new JTextField();
         t.setEditable(false);
-        t.setBackground(new Color(250, 252, 255)); // Màu nền xám rất nhẹ
+        t.setBackground(new Color(250, 252, 255));
         t.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        t.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+        t.setForeground(new Color(60, 60, 60));
+        t.putClientProperty("FlatLaf.style", "arc: 8; borderWidth: 1; borderColor: #E0E0E0");
+        t.setPreferredSize(new Dimension(200, 38));
         return t;
     }
 
     private void addComp(JPanel p, GridBagConstraints gbc, int row, String lblText, JComponent comp) {
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        gbc.gridy = row;
+        gbc.gridx = 0; gbc.weightx = 0.35;
         JLabel lbl = new JLabel(lblText);
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lbl.setForeground(new Color(80, 80, 80));
+        lbl.setForeground(new Color(100, 100, 100));
         p.add(lbl, gbc);
         
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1; gbc.weightx = 0.65;
         p.add(comp, gbc);
     }
 }

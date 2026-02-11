@@ -2,252 +2,270 @@ package HETHONG;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
-import CHUNG.DBConnect;
+import java.util.Map;
+import THONGKE.DAL_ThongKe;
 
 public class GUI_TrangChu extends JPanel {
 
-    private DTO_TaiKhoan tk; // Lưu tài khoản đang đăng nhập
+    private DTO_TaiKhoan tk;
+    private DAL_ThongKe dalThongKe = new DAL_ThongKe();
+    private Color bgColor = new Color(245, 248, 253);
 
-    // Class lưu trữ dữ liệu cho từng cột
-    private class DataColumn {
-        String title;
-        int value;
-        Color color1, color2, shadowColor;
-
-        public DataColumn(String title, int value, Color c1, Color c2) {
-            this.title = title;
-            this.value = value;
-            this.color1 = c1;
-            this.color2 = c2;
-            this.shadowColor = new Color(c2.getRed(), c2.getGreen(), c2.getBlue(), 80);
-        }
-    }
-
-    private ArrayList<DataColumn> listData = new ArrayList<>();
-    private int maxValue = 0; 
+    private JLabel lblTotalSach, lblTotalDocGia, lblTotalMuon, lblTotalQuaHan;
+    private JTable tableMuonGanDay;
+    private DefaultTableModel modelMuon;
+    private Map<String, Integer> pieData;
+    private JPanel pnlDrawingChart;
+    
+    // Biến giao diện cho Độc giả
+    private JTextArea txtThongBao, txtSuggest, txtRules;
 
     public GUI_TrangChu(DTO_TaiKhoan tk) {
         this.tk = tk;
-        setLayout(new BorderLayout());
-        setBorder(new EmptyBorder(30, 30, 30, 30));
-
-        // 1. Load dữ liệu (Tự động phân biệt Admin/Độc giả bên trong hàm này)
+        initUI();
         loadDataDB();
-
-        // 2. Panel Biểu đồ
-        JPanel pnlChart = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                // Không gọi super để giữ nền trong suốt, hàm paintComponent của GUI_TrangChu sẽ lo vẽ nền
-                drawChart((Graphics2D) g, getWidth(), getHeight());
-            }
-        };
-        pnlChart.setOpaque(false); 
-        add(pnlChart, BorderLayout.CENTER);
-
-        // 3. Footer
-        JLabel lblFooter = new JLabel("HỆ THỐNG QUẢN LÝ THƯ VIỆN 2026", SwingConstants.CENTER);
-        lblFooter.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblFooter.setForeground(new Color(120, 130, 150));
-        lblFooter.setBorder(new EmptyBorder(20, 0, 0, 0));
-        add(lblFooter, BorderLayout.SOUTH);
     }
 
-    // Vẽ nền Gradient
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        int w = getWidth();
-        int h = getHeight();
-        Color color1 = new Color(255, 255, 255); 
-        Color color2 = new Color(195, 225, 250); 
-        GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
-        g2d.setPaint(gp);
-        g2d.fillRect(0, 0, w, h);
+    private void initUI() {
+        setLayout(new BorderLayout(20, 20));
+        setBackground(bgColor);
+        setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        // 1. HEADER - Cập nhật cho cả Admin và Staff
+        String headerText = (tk.getPhanQuyen() == 1 || tk.getPhanQuyen() == 2) ? "TỔNG QUAN HỆ THỐNG" : "TỔNG QUAN TÀI KHOẢN";
+        JLabel lblHeader = new JLabel(headerText);
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblHeader.setForeground(new Color(45, 52, 54));
+        add(lblHeader, BorderLayout.NORTH);
+
+        // 2. CENTER CONTAINER
+        JPanel pnlCenter = new JPanel(new BorderLayout(0, 25));
+        pnlCenter.setOpaque(false);
+
+        // --- A. THẺ THỐNG KÊ ---
+        JPanel pnlStats = new JPanel(new GridLayout(1, 4, 20, 0));
+        pnlStats.setOpaque(false);
+
+        lblTotalSach = new JLabel("0");
+        lblTotalDocGia = new JLabel("0");
+        lblTotalMuon = new JLabel("0");
+        lblTotalQuaHan = new JLabel("0");
+
+        // Cập nhật: Quyền 1 (Admin) và 2 (Staff) dùng chung thẻ lớn
+        if (tk.getPhanQuyen() == 1 || tk.getPhanQuyen() == 2) {
+            pnlStats.add(createStatCard("TỔNG SỐ SÁCH", lblTotalSach, "📚", new Color(52, 152, 219)));
+            pnlStats.add(createStatCard("ĐỘC GIẢ", lblTotalDocGia, "👥", new Color(46, 204, 113)));
+            pnlStats.add(createStatCard("ĐANG MƯỢN", lblTotalMuon, "🔄", new Color(241, 196, 15)));
+            pnlStats.add(createStatCard("QUÁ HẠN", lblTotalQuaHan, "⚠️", new Color(231, 76, 60)));
+        } else {
+            pnlStats.add(createMiniStatCard("SÁCH HIỆN CÓ", lblTotalSach, "📖", new Color(52, 152, 219)));
+            pnlStats.add(createMiniStatCard("SÁCH ĐANG MƯỢN", lblTotalMuon, "📄", new Color(46, 204, 113)));
+            pnlStats.add(createMiniStatCard("SÁCH QUÁ HẠN", lblTotalQuaHan, "⏰", new Color(231, 76, 60)));
+            JPanel pnlEmpty = new JPanel(); pnlEmpty.setOpaque(false); pnlStats.add(pnlEmpty);
+        }
+        pnlCenter.add(pnlStats, BorderLayout.NORTH);
+
+        // --- B. VÙNG NỘI DUNG CHÍNH ---
+        JPanel pnlVisuals = new JPanel(new GridLayout(1, 2, 25, 0));
+        pnlVisuals.setOpaque(false);
+
+        // 1. CỘT PHẢI: BIỂU ĐỒ (Chung)
+        JPanel pnlChartSection = new JPanel(new BorderLayout());
+        pnlChartSection.setBackground(Color.WHITE);
+        pnlChartSection.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        JLabel lblChartTitle = new JLabel("THỐNG KÊ THỂ LOẠI");
+        lblChartTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        pnlChartSection.add(lblChartTitle, BorderLayout.NORTH);
+        
+        pnlDrawingChart = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawSmoothPieChart((Graphics2D) g, getWidth(), getHeight());
+            }
+        };
+        pnlDrawingChart.setOpaque(false);
+        pnlChartSection.add(pnlDrawingChart, BorderLayout.CENTER);
+
+        // 2. CỘT TRÁI: HIỂN THỊ THEO QUYỀN
+        // Cập nhật: Quyền 1 và 2 hiện bảng Hoạt động gần đây
+        if (tk.getPhanQuyen() == 1 || tk.getPhanQuyen() == 2) {
+            JPanel pnlRecent = new JPanel(new BorderLayout());
+            pnlRecent.setBackground(Color.WHITE);
+            pnlRecent.setBorder(new EmptyBorder(20, 20, 20, 20));
+            JLabel lblRecentTitle = new JLabel("HOẠT ĐỘNG GẦN ĐÂY");
+            lblRecentTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            pnlRecent.add(lblRecentTitle, BorderLayout.NORTH);
+
+            modelMuon = new DefaultTableModel(new String[]{"Mã Phiếu", "Độc Giả", "Ngày Mượn", "Trạng Thái"}, 0);
+            tableMuonGanDay = new JTable(modelMuon);
+            styleTable(tableMuonGanDay);
+            JScrollPane scrollTable = new JScrollPane(tableMuonGanDay);
+            pnlRecent.add(scrollTable, BorderLayout.CENTER);
+            pnlVisuals.add(pnlRecent);
+        } else {
+            JPanel pnlRightSide = new JPanel(new GridLayout(3, 1, 0, 15));
+            pnlRightSide.setOpaque(false);
+            
+            txtThongBao = createContentArea();
+            txtSuggest = createContentArea();
+            txtRules = createContentArea();
+            txtRules.setText("• Mượn tối đa 5 cuốn/14 ngày.\n• Tiền phạt quá hạn: 4.000đ/ngày.");
+
+            pnlRightSide.add(createSectionPanel("THÔNG BÁO MỚI", txtThongBao, new Color(52, 152, 219)));
+            pnlRightSide.add(createSectionPanel("GỢI Ý CHO BẠN", txtSuggest, new Color(230, 126, 34)));
+            pnlRightSide.add(createSectionPanel("QUY ĐỊNH MƯỢN TRẢ", txtRules, new Color(45, 52, 54)));
+            
+            pnlVisuals.add(pnlRightSide);
+        }
+
+        pnlVisuals.add(pnlChartSection);
+        pnlCenter.add(pnlVisuals, BorderLayout.CENTER);
+        add(pnlCenter, BorderLayout.CENTER);
+    }
+
+    private JPanel createMiniStatCard(String title, JLabel lblValue, String icon, Color color) {
+        JPanel card = new JPanel(new BorderLayout(15, 0));
+        card.setBackground(Color.WHITE);
+        card.setBorder(new EmptyBorder(15, 20, 15, 20));
+        JLabel lblIcon = new JLabel(icon);
+        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
+        lblIcon.setForeground(color);
+        JPanel pnlText = new JPanel(new GridLayout(2, 1, 0, 0));
+        pnlText.setOpaque(false);
+        JLabel lblT = new JLabel(title);
+        lblT.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblT.setForeground(Color.GRAY);
+        lblValue.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        pnlText.add(lblT); pnlText.add(lblValue);
+        card.add(lblIcon, BorderLayout.WEST);
+        card.add(pnlText, BorderLayout.CENTER);
+        return card;
+    }
+
+    private JPanel createStatCard(String title, JLabel lblValue, String icon, Color themeColor) {
+        JPanel card = new JPanel(new BorderLayout(15, 0));
+        card.setBackground(Color.WHITE);
+        card.setBorder(new EmptyBorder(20, 15, 20, 15));
+        JLabel lblIcon = new JLabel(icon);
+        lblIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 42));
+        lblIcon.setForeground(themeColor);
+        card.add(lblIcon, BorderLayout.WEST);
+        JPanel pnlText = new JPanel(new GridLayout(2, 1, 0, 2));
+        pnlText.setOpaque(false);
+        JLabel lblT = new JLabel(title);
+        lblT.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        lblValue.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        pnlText.add(lblT); pnlText.add(lblValue);
+        card.add(pnlText, BorderLayout.CENTER);
+        return card;
+    }
+
+    private JTextArea createContentArea() {
+        JTextArea txt = new JTextArea("Đang tải...");
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txt.setEditable(false);
+        txt.setOpaque(false);
+        txt.setLineWrap(true);
+        txt.setWrapStyleWord(true);
+        return txt;
+    }
+
+    private JPanel createSectionPanel(String title, JTextArea content, Color accentColor) {
+        JPanel pnl = new JPanel(new BorderLayout(0, 8));
+        pnl.setBackground(Color.WHITE);
+        pnl.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblT = new JLabel(title);
+        lblT.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblT.setForeground(accentColor);
+        pnl.add(lblT, BorderLayout.NORTH);
+        pnl.add(content, BorderLayout.CENTER);
+        return pnl;
+    }
+
+    private void styleTable(JTable table) {
+        table.setRowHeight(40);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+        center.setHorizontalAlignment(JLabel.CENTER);
+        for(int i=0; i<table.getColumnCount(); i++) table.getColumnModel().getColumn(i).setCellRenderer(center);
+    }
+
+    private void drawSmoothPieChart(Graphics2D g2d, int w, int h) {
+        if (pieData == null || pieData.isEmpty()) return;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        int size = Math.min(w, h) - 120;
+        int x = 40; int y = (h - size) / 2;
+        Color[] colors = { new Color(52, 152, 219), new Color(46, 204, 113), new Color(155, 89, 182), new Color(241, 196, 15), new Color(230, 126, 34) };
+        double total = 0;
+        for (int val : pieData.values()) total += val;
+        double curAngle = 90; int colorIdx = 0;
+        int legendX = x + size + 30; int legendY = y + 20;
+        for (Map.Entry<String, Integer> entry : pieData.entrySet()) {
+            double angle = (entry.getValue() / total) * 360;
+            g2d.setColor(colors[colorIdx % colors.length]);
+            g2d.fillArc(x, y, size, size, (int) curAngle, (int) Math.ceil(angle));
+            g2d.fillRect(legendX, legendY, 12, 12);
+            g2d.setColor(new Color(60, 60, 60));
+            g2d.drawString(entry.getKey() + " (" + entry.getValue() + ")", legendX + 20, legendY + 11);
+            legendY += 30; curAngle += angle; colorIdx++;
+        }
+        g2d.setColor(Color.WHITE); g2d.fillOval(x + size/4, y + size/4, size/2, size/2);
     }
 
     private void loadDataDB() {
-        listData.clear();
-        
-        if (tk.getPhanQuyen() == 3) { 
-            // --- [ĐỘC GIẢ] LOAD THỐNG KÊ CÁ NHÂN ---
-            String maDG = tk.getMaDocGia();
-            
-            // Lấy số liệu cá nhân
-            int dangMuon = getCountPersonal(maDG, "Đang mượn");
-            int daTra = getCountPersonal(maDG, "Đã trả");
-            int quaHan = getCountPersonal(maDG, "Quá hạn");
-            int tongLuot = getCountAllPersonal(maDG); // Tổng số phiếu từng mượn
+        new Thread(() -> {
+            try {
+                int sach = dalThongKe.getTongDauSach();
+                int docgia = 0, dangMuon = 0, quaHan = 0;
+                ArrayList<Object[]> listFinal = new ArrayList<>();
+                String notice = ""; ArrayList<Object[]> suggest = new ArrayList<>();
 
-            // 1. TỔNG LƯỢT (Màu Tím Royal - Thể hiện lịch sử dày dạn)
-            listData.add(new DataColumn("TỔNG LƯỢT", tongLuot, 
-                    new Color(160, 100, 255), new Color(110, 50, 230)));
+                // Cập nhật: Quyền 1 và 2 tải dữ liệu quản lý tổng hợp
+                if (tk.getPhanQuyen() == 1 || tk.getPhanQuyen() == 2) {
+                    docgia = dalThongKe.getTongDocGia();
+                    dangMuon = dalThongKe.getTongPhieuMuon();
+                    quaHan = dalThongKe.getTongViPham();
+                    listFinal = dalThongKe.getMuonTraGanDay();
+                } else {
+                    String maDG = tk.getMaDocGia();
+                    dangMuon = dalThongKe.getCountGlobal("SELECT COUNT(*) FROM phieu_muon WHERE MaDocGia = '" + maDG + "' AND TinhTrang LIKE N'%Đang mượn%'");
+                    quaHan = dalThongKe.getCountGlobal("SELECT COUNT(*) FROM phieu_muon WHERE MaDocGia = '" + maDG + "' AND TinhTrang LIKE N'%Quá hạn%'");
+                    notice = dalThongKe.getThongBaoMoiNhat();
+                    suggest = dalThongKe.getSachGoiY(maDG);
+                }
 
-            // 2. ĐANG MƯỢN (Màu Cam - Đang hoạt động)
-            listData.add(new DataColumn("ĐANG MƯỢN", dangMuon, 
-                    new Color(255, 180, 60), new Color(255, 140, 0)));
+                pieData = dalThongKe.getDataPieChart();
+                final int s = sach, d = docgia, m = dangMuon, q = quaHan;
+                final ArrayList<Object[]> activities = listFinal;
+                final String nt = notice; final ArrayList<Object[]> sg = suggest;
 
-            // 3. ĐÃ TRẢ (Màu Xanh Lá - Uy tín)
-            listData.add(new DataColumn("ĐÃ TRẢ", daTra, 
-                    new Color(100, 220, 120), new Color(46, 180, 80)));
+                SwingUtilities.invokeLater(() -> {
+                    lblTotalSach.setText(String.valueOf(s));
+                    // Cập nhật nhãn hiển thị số lượng độc giả cho Admin/Staff
+                    if (tk.getPhanQuyen() == 1 || tk.getPhanQuyen() == 2) lblTotalDocGia.setText(String.valueOf(d));
+                    else lblTotalDocGia.setText("Cá nhân");
+                    
+                    lblTotalMuon.setText(String.valueOf(m));
+                    lblTotalQuaHan.setText(String.valueOf(q));
 
-            // 4. QUÁ HẠN (Màu Đỏ - Cảnh báo)
-            listData.add(new DataColumn("QUÁ HẠN", quaHan, 
-                    new Color(255, 94, 98), new Color(220, 40, 50)));
-
-        } else {
-            // --- [ADMIN/THỦ THƯ] LOAD THỐNG KÊ TOÀN HỆ THỐNG ---
-            int sach = getCountGlobal("sach");
-            int docgia = getCountGlobal("doc_gia");
-            int dangmuon = getCountGlobal("phieu_muon WHERE TinhTrang LIKE N'%Đang mượn%'"); 
-            int quahan = getCountGlobal("phieu_muon WHERE TinhTrang LIKE N'%Quá hạn%'");    
-            
-            listData.add(new DataColumn("TỔNG SÁCH", sach, new Color(0, 198, 255), new Color(0, 114, 255)));
-            listData.add(new DataColumn("ĐỘC GIẢ", docgia, new Color(29, 233, 182), new Color(13, 169, 154)));
-            listData.add(new DataColumn("ĐANG MƯỢN", dangmuon, new Color(255, 154, 68), new Color(252, 96, 118)));
-            listData.add(new DataColumn("QUÁ HẠN", quahan, new Color(255, 94, 98), new Color(193, 39, 45)));
-        }
-
-        // Tính Max Value để chia tỷ lệ cột
-        maxValue = 0;
-        for (DataColumn d : listData) {
-            if (d.value > maxValue) maxValue = d.value;
-        }
-        if (maxValue == 0) maxValue = 1; 
-    }
-
-    private void drawChart(Graphics2D g2, int w, int h) {
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-        // --- TIÊU ĐỀ THAY ĐỔI THEO VAI TRÒ ---
-        String title = (tk.getPhanQuyen() == 3) ? 
-                       "THỐNG KÊ CÁ NHÂN CỦA BẠN" : "TỔNG QUAN HOẠT ĐỘNG HỆ THỐNG";
-        
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 32));
-        g2.setColor(new Color(55, 65, 80)); 
-        FontMetrics fm = g2.getFontMetrics();
-        g2.drawString(title, (w - fm.stringWidth(title)) / 2, 60);
-
-        // Nếu là Độc giả, thêm dòng chào nhỏ bên dưới
-        if (tk.getPhanQuyen() == 3) {
-            g2.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-            g2.setColor(new Color(100, 100, 100));
-            String sub = "Xin chào " + tk.getUserName() + ", đây là hồ sơ mượn sách của bạn.";
-            g2.drawString(sub, (w - g2.getFontMetrics().stringWidth(sub)) / 2, 90);
-        }
-
-        // Cấu hình vẽ cột (Giống code cũ)
-        int numCols = listData.size();
-        int gap = 70;
-        int maxBarHeight = h - 240; // Giảm chiều cao cột chút để chừa chỗ cho sub-title
-        int barWidth = 170; 
-        
-        int totalChartWidth = (numCols * barWidth) + ((numCols - 1) * gap);
-        int startX = (w - totalChartWidth) / 2;
-        int bottomY = h - 90; 
-
-        for (int i = 0; i < numCols; i++) {
-            DataColumn item = listData.get(i);
-            
-            double TyLe = (double) item.value / maxValue;
-            if (item.value > 0 && TyLe < 0.08) TyLe = 0.08; 
-            
-            int barHeight = (int) (TyLe * maxBarHeight);
-            if (item.value == 0) barHeight = 5; 
-            
-            int x = startX + i * (barWidth + gap);
-            int y = bottomY - barHeight;
-
-            // Bóng
-            g2.setColor(item.shadowColor);
-            g2.fillRoundRect(x + 8, y + 15, barWidth - 16, barHeight - 10, 35, 35);
-            g2.setColor(new Color(item.shadowColor.getRed(), item.shadowColor.getGreen(), item.shadowColor.getBlue(), 40));
-            g2.fillRoundRect(x + 4, y + 8, barWidth - 8, barHeight, 40, 40);
-
-            // Cột
-            GradientPaint gp = new GradientPaint(x, y, item.color1, x + barWidth, y + barHeight, item.color2);
-            g2.setPaint(gp);
-            g2.fillRoundRect(x, y, barWidth, barHeight, 25, 25);
-
-            // Số liệu
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 42));
-            String valStr = String.valueOf(item.value);
-            fm = g2.getFontMetrics();
-            int textY = y + 60;
-            boolean isInside = true;
-            if (barHeight < 70) { textY = y - 15; isInside = false; }
-
-            if (isInside) {
-                g2.setColor(new Color(0,0,0,50));
-                g2.drawString(valStr, x + (barWidth - fm.stringWidth(valStr)) / 2 + 2, textY + 2);
-            }
-            g2.setColor(isInside ? Color.WHITE : item.color2);
-            g2.drawString(valStr, x + (barWidth - fm.stringWidth(valStr)) / 2, textY);
-
-            // Tên cột
-            g2.setColor(new Color(90, 100, 120));
-            g2.setFont(new Font("Segoe UI", Font.BOLD, 15));
-            fm = g2.getFontMetrics();
-            g2.drawString(item.title.toUpperCase(), x + (barWidth - fm.stringWidth(item.title.toUpperCase())) / 2, bottomY + 35);
-        }
-    }
-
-    // --- CÁC HÀM TRUY VẤN DỮ LIỆU ---
-
-    // 1. Lấy thống kê cho Admin (Toàn hệ thống)
-    private int getCountGlobal(String tableName) {
-        int count = 0;
-        try {
-            Connection conn = new DBConnect().getConnection();
-            Statement stmt = conn.createStatement();
-            String query = "SELECT COUNT(*) FROM " + tableName;
-            if(tableName.toUpperCase().contains("SELECT")) query = tableName; 
-            ResultSet rs = stmt.executeQuery(query);
-            if (rs.next()) count = rs.getInt(1);
-            conn.close();
-        } catch (Exception e) { e.printStackTrace(); }
-        return count;
-    }
-
-    // 2. Lấy thống kê riêng cho Độc giả theo Tình Trạng
-    private int getCountPersonal(String maDocGia, String tinhTrangKeyword) {
-        int count = 0;
-        try {
-            Connection conn = new DBConnect().getConnection();
-            // Tìm trong bảng PHIEU_MUON theo MaDocGia và TinhTrang
-            String sql = "SELECT COUNT(*) FROM PHIEU_MUON WHERE MaDocGia = ? AND TinhTrang LIKE ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, maDocGia);
-            ps.setString(2, "%" + tinhTrangKeyword + "%");
-            
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) count = rs.getInt(1);
-            conn.close();
-        } catch (Exception e) { e.printStackTrace(); }
-        return count;
-    }
-
-    // 3. Lấy tổng số phiếu mượn của Độc giả (Không quan tâm tình trạng)
-    private int getCountAllPersonal(String maDocGia) {
-        int count = 0;
-        try {
-            Connection conn = new DBConnect().getConnection();
-            String sql = "SELECT COUNT(*) FROM PHIEU_MUON WHERE MaDocGia = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, maDocGia);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) count = rs.getInt(1);
-            conn.close();
-        } catch (Exception e) { e.printStackTrace(); }
-        return count;
+                    if (tk.getPhanQuyen() == 1 || tk.getPhanQuyen() == 2) {
+                        modelMuon.setRowCount(0);
+                        for (Object[] row : activities) modelMuon.addRow(row);
+                    } else {
+                        txtThongBao.setText(nt);
+                        StringBuilder sb = new StringBuilder();
+                        for (Object[] r : sg) sb.append("• ").append(r[0]).append(" (").append(r[1]).append(")\n");
+                        txtSuggest.setText(sb.length() > 0 ? sb.toString() : "Hãy mượn thêm sách để nhận gợi ý!");
+                    }
+                    if (pnlDrawingChart != null) pnlDrawingChart.repaint();
+                });
+            } catch (Exception e) { e.printStackTrace(); }
+        }).start();
     }
 }
