@@ -11,8 +11,8 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/javax.mail-1.6.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/activation-1.1.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/flatlaf-3.5.4.jar"/>
+	<classpathentry kind="lib" path="D:/KyNangNghe/flatlaf-3.5.4.jar"/>
+	<classpathentry kind="lib" path="D:/KyNangNghe/activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="D:/KyNangNghe/javax.mail-1.6.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

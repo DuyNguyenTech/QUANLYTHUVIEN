@@ -170,22 +170,44 @@ public class GUI_DialogThongKeViPham extends JDialog {
             }
         });
     }
-
+    
     private void loadData() {
         model.setRowCount(0);
-        java.util.ArrayList<MUONTRA.DTO_PhieuMuon> list = (java.util.ArrayList<MUONTRA.DTO_PhieuMuon>) dal.getListViPham();
-        for (MUONTRA.DTO_PhieuMuon pm : list) {
-            model.addRow(new Object[]{
-                pm.getMaPhieuMuon(),
-                (pm.getNgayMuon() != null ? sdf.format(pm.getNgayMuon()) : ""),
-                (pm.getNgayHenTra() != null ? sdf.format(pm.getNgayHenTra()) : ""), 
-                pm.getMaDocGia(),
-                pm.getTinhTrang(), 
-                df.format(pm.getTienPhat())
-            });
+        
+        // Sử dụng import ở đầu file hoặc viết đầy đủ như thế này để tránh nhầm lẫn ArrayList
+        java.util.ArrayList<MUONTRA.DTO_PhieuMuon> list = dal.getListViPham();
+        
+        if (list != null) {
+            for (MUONTRA.DTO_PhieuMuon pm : list) {
+                model.addRow(new Object[]{
+                    pm.getMaPhieuMuon(),
+                    (pm.getNgayMuon() != null ? sdf.format(pm.getNgayMuon()) : ""),
+                    (pm.getNgayHenTra() != null ? sdf.format(pm.getNgayHenTra()) : ""), 
+                    pm.getMaDocGia(),
+                    pm.getTinhTrang(), 
+                    df.format(pm.getTienPhat())
+                });
+            }
+            lblTongViPham.setText(list.size() + " trường hợp");
         }
-        lblTongViPham.setText(list.size() + " trường hợp");
     }
+
+//    private void loadData() {
+//        model.setRowCount(0);
+//        ArrayList<MUONTRA.DTO_PhieuMuon> list = dal.getListViPham();
+////        java.util.ArrayList<MUONTRA.DTO_PhieuMuon> list = (java.util.ArrayList<MUONTRA.DTO_PhieuMuon>) dal.getListViPham();
+//        for (MUONTRA.DTO_PhieuMuon pm : list) {
+//            model.addRow(new Object[]{
+//                pm.getMaPhieuMuon(),
+//                (pm.getNgayMuon() != null ? sdf.format(pm.getNgayMuon()) : ""),
+//                (pm.getNgayHenTra() != null ? sdf.format(pm.getNgayHenTra()) : ""), 
+//                pm.getMaDocGia(),
+//                pm.getTinhTrang(), 
+//                df.format(pm.getTienPhat())
+//            });
+//        }
+//        lblTongViPham.setText(list.size() + " trường hợp");
+//    }
 
     private JButton createButton(String text, Color bg) {
         JButton btn = new JButton(text);

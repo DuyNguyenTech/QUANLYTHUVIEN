@@ -6,6 +6,7 @@ import MUONTRA.DAL_PhieuMuon;
 import MUONTRA.DTO_PhieuMuon;
 import MUONTRA.GUI_DialogChiTietPhieuMuon;
 
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -187,12 +188,13 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
      */
     private void loadData(String option) {
         model.setRowCount(0); // Xóa dữ liệu cũ trên bảng trước khi nạp mới
-        ArrayList<DTO_PhieuMuon> list = dal.getListMuonTra(option); // Gọi DAL để lấy danh sách đã lọc
         
+     // Thêm tiền tố MUONTRA. vào trước tên lớp
+        ArrayList<MUONTRA.DTO_PhieuMuon> list = dal.getListMuonTra(option); 
+
         if (list != null) {
-            for (DTO_PhieuMuon pm : list) {
+            for (MUONTRA.DTO_PhieuMuon pm : list) { // Chỗ này cũng phải có MUONTRA.
                 String ngayTra = (pm.getNgayTra() != null) ? sdf.format(pm.getNgayTra()) : "";
-                // Hiển thị trạng thái "Đang mượn" nếu chưa có ngày trả, ngược lại là "Đã trả"
                 String trangThai = (pm.getNgayTra() == null) ? "Đang mượn" : "Đã trả";
                 
                 model.addRow(new Object[]{
@@ -202,8 +204,26 @@ public class GUI_DialogThongKeMuonTra extends JDialog {
                     trangThai
                 });
             }
-            lblTongSo.setText(list.size() + " phiếu"); // Cập nhật tổng số phiếu tìm thấy
+            lblTongSo.setText(list.size() + " phiếu");
         }
+        
+//        ArrayList<DTO_PhieuMuon> list = dal.getListMuonTra(option); // Gọi DAL để lấy danh sách đã lọc
+//        
+//        if (list != null) {
+//            for (DTO_PhieuMuon pm : list) {
+//                String ngayTra = (pm.getNgayTra() != null) ? sdf.format(pm.getNgayTra()) : "";
+//                // Hiển thị trạng thái "Đang mượn" nếu chưa có ngày trả, ngược lại là "Đã trả"
+//                String trangThai = (pm.getNgayTra() == null) ? "Đang mượn" : "Đã trả";
+//                
+//                model.addRow(new Object[]{
+//                    pm.getMaPhieuMuon(), 
+//                    (pm.getNgayMuon() != null ? sdf.format(pm.getNgayMuon()) : ""), 
+//                    ngayTra, 
+//                    trangThai
+//                });
+//            }
+//            lblTongSo.setText(list.size() + " phiếu"); // Cập nhật tổng số phiếu tìm thấy
+//        }
     }
 
     private JButton createButton(String text, Color bg) {
